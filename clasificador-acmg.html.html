@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Clasificador ACMG/AMP — GenomiKmente</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --navy: #0D1B2A;
+      --navy-mid: #1a2e45;
+      --navy-light: #243d58;
+      --coral: #E8604A;
+      --coral-dark: #993C1D;
+      --coral-soft: #F5C4B3;
+      --cream: #FAF8F5;
+      --cream-dark: #F0EDE8;
+      --gray: #8a9bb0;
+      --gray-light: #e8ecf0;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--cream);
+      color: var(--navy);
+      min-height: 100vh;
+    }
+
+    /* ── HEADER ── */
+    header {
+      background: var(--navy);
+      padding: 18px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .header-left { display: flex; align-items: center; gap: 12px; }
+    .header-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--coral); flex-shrink: 0; }
+    .header-brand { font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600; color: #fff; letter-spacing: 0.12em; text-transform: uppercase; }
+    .header-sub { font-size: 11px; color: var(--gray); font-weight: 300; }
+    .header-ref { font-size: 10px; color: var(--gray); text-align: right; line-height: 1.5; }
+
+    /* ── HERO ── */
+    .hero {
+      background: var(--navy);
+      padding: 40px 24px 48px;
+      text-align: center;
+      border-bottom: 3px solid var(--coral);
+    }
+    .hero-tag {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--coral);
+      background: rgba(232,96,74,0.12);
+      padding: 5px 14px;
+      border-radius: 20px;
+      margin-bottom: 16px;
+    }
+    .hero h1 {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: clamp(26px, 5vw, 38px);
+      font-weight: 700;
+      color: #fff;
+      line-height: 1.2;
+      margin-bottom: 10px;
+    }
+    .hero p {
+      font-size: 14px;
+      color: var(--gray);
+      font-weight: 300;
+      max-width: 500px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    /* ── MAIN LAYOUT ── */
+    .container { max-width: 800px; margin: 0 auto; padding: 32px 20px 60px; }
+
+    /* ── SECTION LABELS ── */
+    .section-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--navy);
+      margin-bottom: 10px;
+      padding-left: 2px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--navy);
+      opacity: 0.15;
+    }
+    .section-path .section-label::after { background: var(--navy); }
+    .section-benign .section-label { color: var(--coral-dark); }
+    .section-benign .section-label::after { background: var(--coral); }
+
+    /* ── CRITERIA GRIDS ── */
+    .criteria-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 7px;
+      margin-bottom: 28px;
+    }
+
+    .crit-btn {
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1.5px solid var(--gray-light);
+      cursor: pointer;
+      text-align: left;
+      background: #fff;
+      transition: all 0.15s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .crit-btn:hover { border-color: var(--navy); transform: translateY(-1px); box-shadow: 0 3px 10px rgba(13,27,42,0.08); }
+    .crit-btn .code { font-size: 13px; font-weight: 700; display: block; margin-bottom: 3px; color: var(--navy); }
+    .crit-btn .weight-badge { font-size: 9px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; display: block; margin-bottom: 4px; }
+    .crit-btn .desc { font-size: 10px; color: var(--gray); font-weight: 400; line-height: 1.35; }
+
+    /* Pathogenic active */
+    .crit-btn.active-path { background: var(--navy); border-color: var(--navy); }
+    .crit-btn.active-path .code { color: #fff; }
+    .crit-btn.active-path .desc { color: rgba(255,255,255,0.6); }
+    .crit-btn.active-path .weight-badge { color: var(--coral); }
+
+    /* Benign active */
+    .crit-btn.active-benign { background: var(--coral); border-color: var(--coral-dark); }
+    .crit-btn.active-benign .code { color: #fff; }
+    .crit-btn.active-benign .desc { color: rgba(255,255,255,0.65); }
+    .crit-btn.active-benign .weight-badge { color: rgba(255,255,255,0.85); }
+
+    /* Weight badges inactive */
+    .badge-vvs { color: #7c3aed; }
+    .badge-strong { color: #1d4ed8; }
+    .badge-mod { color: #0369a1; }
+    .badge-sup { color: #6b7280; }
+    .badge-sa { color: #991b1b; }
+    .badge-sb { color: #c2410c; }
+    .badge-bp { color: #9a3412; }
+
+    /* ── SELECTED SUMMARY ── */
+    .summary-bar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+      min-height: 32px;
+    }
+    .sum-chip {
+      font-size: 11px;
+      font-weight: 500;
+      padding: 5px 12px;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .sum-chip-path { background: rgba(13,27,42,0.08); color: var(--navy); }
+    .sum-chip-benign { background: rgba(232,96,74,0.1); color: var(--coral-dark); }
+
+    /* ── DIVIDER ── */
+    .divider { height: 1px; background: var(--navy); opacity: 0.1; margin: 8px 0 24px; }
+
+    /* ── RESULT CARD ── */
+    .result-area { margin-top: 8px; }
+    .no-selection {
+      font-size: 13px;
+      color: var(--gray);
+      padding: 20px 0 8px;
+      text-align: center;
+      font-style: italic;
+    }
+
+    .result-card {
+      border-radius: 12px;
+      padding: 24px 28px;
+      border: 2px solid transparent;
+      transition: all 0.3s ease;
+    }
+    .result-label-sm {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+      opacity: 0.7;
+    }
+    .result-class-text {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      line-height: 1.15;
+    }
+    .result-detail-text { font-size: 13px; line-height: 1.6; opacity: 0.85; }
+    .result-chips { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+    .result-chip {
+      font-size: 11px;
+      font-weight: 500;
+      padding: 4px 12px;
+      border-radius: 20px;
+      background: rgba(255,255,255,0.18);
+    }
+    .result-chip-dark { background: rgba(0,0,0,0.07); }
+
+    /* Result themes */
+    .res-P  { background: var(--navy); border-color: var(--navy-mid); color: #fff; }
+    .res-LP { background: var(--navy-mid); border-color: var(--navy-light); color: #fff; }
+    .res-VUS { background: #fff; border-color: var(--gray-light); color: var(--navy); }
+    .res-VUS .result-label-sm { opacity: 0.5; }
+    .res-LB { background: var(--coral-soft); border-color: rgba(232,96,74,0.3); color: #4A1B0C; }
+    .res-B  { background: var(--coral); border-color: var(--coral-dark); color: #fff; }
+
+    /* ── ACTIONS ── */
+    .actions-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+    .btn-reset {
+      padding: 9px 20px;
+      border-radius: 8px;
+      border: 1.5px solid rgba(13,27,42,0.2);
+      background: transparent;
+      color: var(--navy);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      transition: all 0.15s;
+    }
+    .btn-reset:hover { background: var(--cream-dark); }
+
+    /* ── CRITERIA LEGEND ── */
+    .legend { margin-top: 36px; }
+    .legend-title {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--navy);
+      opacity: 0.5;
+      margin-bottom: 12px;
+    }
+    .legend-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px; }
+    .legend-item {
+      font-size: 11px;
+      color: var(--navy);
+      opacity: 0.65;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--navy);
+      padding: 24px;
+      text-align: center;
+      border-top: 3px solid var(--coral);
+    }
+    .footer-brand { font-size: 11px; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: #fff; margin-bottom: 4px; }
+    .footer-sub { font-size: 10px; color: var(--gray); }
+    .footer-note { font-size: 11px; color: var(--gray); margin-top: 12px; max-width: 560px; margin-left: auto; margin-right: auto; line-height: 1.6; }
+
+    /* ── MOBILE ── */
+    @media (max-width: 500px) {
+      .criteria-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 5px; }
+      .hero h1 { font-size: 24px; }
+      .result-class-text { font-size: 22px; }
+      header { flex-direction: column; align-items: flex-start; gap: 6px; }
+      .header-ref { text-align: left; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="header-left">
+      <div class="header-dot"></div>
+      <div>
+        <div class="header-brand">GenomiKmente</div>
+        <div class="header-sub">by Lidia Segura · @genomikmente</div>
+      </div>
+    </div>
+    <div class="header-ref">Richards et al. 2015 · Genet Med 17:405<br>Tavtigian et al. 2018 · ClinGen SVI</div>
+  </header>
+
+  <div class="hero">
+    <div class="hero-tag">Herramienta gratuita</div>
+    <h1>Clasificador ACMG / AMP</h1>
+    <p>Selecciona los criterios que aplican a tu variante. La clasificación se calcula en tiempo real mediante el marco bayesiano de puntos de Tavtigian et al. 2018 (PVS=8, Fuerte=4, Moderado=2, Soporte=1) sobre los criterios ACMG/AMP 2015.</p>
+  </div>
+
+  <div class="container">
+
+    <div class="section-path">
+      <div class="section-label">Evidencia patogénica</div>
+      <div class="criteria-grid" id="path-grid"></div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="section-benign">
+      <div class="section-label">Evidencia benigna</div>
+      <div class="criteria-grid" id="benign-grid"></div>
+    </div>
+
+    <div class="summary-bar" id="summary-bar"></div>
+
+    <div class="result-area" id="result-area">
+      <p class="no-selection">Selecciona los criterios aplicables para clasificar la variante.</p>
+    </div>
+
+    <div class="actions-row">
+      <button class="btn-reset" onclick="resetAll()">↺ Limpiar selección</button>
+    </div>
+
+    <div class="legend">
+      <div class="legend-title">Peso de los criterios</div>
+      <div class="legend-grid">
+        <div class="legend-item"><div class="legend-dot" style="background:#7c3aed"></div>Muy fuerte · PVS (8 pts)</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#1d4ed8"></div>Fuerte · PS / BS (±4 pts)</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#0369a1"></div>Moderado · PM (2 pts)</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#6b7280"></div>Soporte · PP / BP (±1 pt)</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#991b1b"></div>Autónomo · BA1 → Benigna</div>
+      </div>
+      <div class="legend-title" style="margin-top:18px;">Umbrales de puntuación (Tavtigian 2018)</div>
+      <div class="legend-grid">
+        <div class="legend-item"><div class="legend-dot" style="background:var(--navy)"></div>Patogénica: ≥ +10</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--navy-light)"></div>Prob. patogénica: +6 a +9</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--gray)"></div>VUS: 0 a +5</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--coral-soft)"></div>Prob. benigna: −1 a −6</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--coral)"></div>Benigna: ≤ −7</div>
+      </div>
+    </div>
+
+  </div>
+
+  <footer>
+    <div class="footer-brand">GENOMIKMENTE · by Lidia Segura</div>
+    <div class="footer-note">
+      Herramienta de apoyo educativo. Calcula la clasificación mediante el sistema de puntos de Tavtigian et al. 2018 sobre los criterios base ACMG/AMP 2015; <strong>no aplica las especificaciones de fuerza gen-específicas de ClinGen</strong> (p. ej. PM2_Supporting) ni reemplaza la clasificación de un laboratorio acreditado. El marco bayesiano de puntos puede diferir de la tabla combinatoria literal de 2015 en casos límite (p. ej. 2×PS, PVS1+1PM); esto es esperable y está documentado en Tavtigian 2018. La clasificación final debe integrarse siempre con el fenotipo, la historia familiar y el criterio del especialista en genómica clínica.
+    </div>
+  
+  <!-- FEEDBACK BUTTON -->
+  <div style="background:#0D1B2A;padding:28px 24px;text-align:center;border-top:1px solid rgba(255,255,255,0.08);">
+    <p style="font-size:12px;color:#8a9bb0;margin-bottom:14px;line-height:1.6;">¿Te fue útil esta herramienta? Tu feedback me ayuda a mejorarla para toda la comunidad.</p>
+    <a href="https://docs.google.com/forms/d/e/1FAIpQLScrTCxbqe3XFcFpR0BHjPSN5ArlIA3uh49L1J-0ssrsm3hzUQ/viewform?usp=publish-editor"
+       target="_blank" rel="noopener noreferrer"
+       style="display:inline-block;padding:10px 28px;background:#E8604A;color:#fff;font-family:DM Sans,sans-serif;font-size:13px;font-weight:500;border-radius:8px;text-decoration:none;letter-spacing:0.02em;"
+       onmouseover="this.style.opacity=0.85" onmouseout="this.style.opacity=1">
+      Dejar feedback →
+    </a>
+    <p style="font-size:10px;color:#4a5a6a;margin-top:12px;letter-spacing:0.08em;text-transform:uppercase;">GENOMIKMENTE · by Lidia Segura</p>
+  </div>
+
+</footer>
+
+  <script>
+    const pathCriteria = [
+      { code:"PVS1", label:"Nula/pérdida de función",       weight:"very_strong", wLabel:"Muy fuerte",  wClass:"badge-vvs",    pts:8 },
+      { code:"PS1",  label:"Mismo aa, conocida pat.",       weight:"strong",      wLabel:"Fuerte",      wClass:"badge-strong", pts:4 },
+      { code:"PS2",  label:"De novo (confirmado)",          weight:"strong",      wLabel:"Fuerte",      wClass:"badge-strong", pts:4 },
+      { code:"PS3",  label:"Funcional in vitro/in vivo",    weight:"strong",      wLabel:"Fuerte",      wClass:"badge-strong", pts:4 },
+      { code:"PS4",  label:"Prevalencia ↑ en casos",        weight:"strong",      wLabel:"Fuerte",      wClass:"badge-strong", pts:4 },
+      { code:"PM1",  label:"Hot spot / dominio crítico",    weight:"moderate",    wLabel:"Moderado",    wClass:"badge-mod",    pts:2 },
+      { code:"PM2",  label:"Ausente/rara en controles",     weight:"moderate",    wLabel:"Moderado",    wClass:"badge-mod",    pts:2 },
+      { code:"PM3",  label:"Trans con pat. (recesivo)",     weight:"moderate",    wLabel:"Moderado",    wClass:"badge-mod",    pts:2 },
+      { code:"PM4",  label:"In-frame / región compleja",    weight:"moderate",    wLabel:"Moderado",    wClass:"badge-mod",    pts:2 },
+      { code:"PM5",  label:"Nuevo aa, posición conocida",   weight:"moderate",    wLabel:"Moderado",    wClass:"badge-mod",    pts:2 },
+      { code:"PM6",  label:"De novo (no confirmado)",       weight:"moderate",    wLabel:"Moderado",    wClass:"badge-mod",    pts:2 },
+      { code:"PP1",  label:"Cosegregación familiar",        weight:"supporting",  wLabel:"Soporte",     wClass:"badge-sup",    pts:1 },
+      { code:"PP2",  label:"Missense en gen restringido",   weight:"supporting",  wLabel:"Soporte",     wClass:"badge-sup",    pts:1 },
+      { code:"PP3",  label:"Predicción dañina (in silico)", weight:"supporting",  wLabel:"Soporte",     wClass:"badge-sup",    pts:1 },
+      { code:"PP4",  label:"Fenotipo altamente específico", weight:"supporting",  wLabel:"Soporte",     wClass:"badge-sup",    pts:1 },
+      { code:"PP5",  label:"Fuente reputada (retirado ClinGen)", weight:"supporting", wLabel:"Soporte", wClass:"badge-sup", pts:1 },
+    ];
+
+    const benignCriteria = [
+      { code:"BA1",  label:"Frecuente en población ≥5%",       weight:"stand_alone", wLabel:"Autónomo",   wClass:"badge-sa", pts:-8 },
+      { code:"BS1",  label:"Frecuencia > esperada para enf.",  weight:"strong_b",    wLabel:"Fuerte",     wClass:"badge-sb", pts:-4 },
+      { code:"BS2",  label:"Observada en sano (rec./AD)",      weight:"strong_b",    wLabel:"Fuerte",     wClass:"badge-sb", pts:-4 },
+      { code:"BS3",  label:"Funcional sin efecto detectado",   weight:"strong_b",    wLabel:"Fuerte",     wClass:"badge-sb", pts:-4 },
+      { code:"BS4",  label:"No cosegrega con enfermedad",      weight:"strong_b",    wLabel:"Fuerte",     wClass:"badge-sb", pts:-4 },
+      { code:"BP1",  label:"Missense en gen de truncantes",    weight:"support_b",   wLabel:"Soporte",    wClass:"badge-bp", pts:-1 },
+      { code:"BP2",  label:"Trans (gen AD) o en cis con pat.",  weight:"support_b",   wLabel:"Soporte",    wClass:"badge-bp", pts:-1 },
+      { code:"BP3",  label:"In-frame en repetición benigna",   weight:"support_b",   wLabel:"Soporte",    wClass:"badge-bp", pts:-1 },
+      { code:"BP4",  label:"Predicción benigna (in silico)",   weight:"support_b",   wLabel:"Soporte",    wClass:"badge-bp", pts:-1 },
+      { code:"BP5",  label:"Causa alternativa identificada",   weight:"support_b",   wLabel:"Soporte",    wClass:"badge-bp", pts:-1 },
+      { code:"BP6",  label:"Fuente reputada (retirado ClinGen)", weight:"support_b",  wLabel:"Soporte",    wClass:"badge-bp", pts:-1 },
+      { code:"BP7",  label:"Sinónima, sin efecto en splicing", weight:"support_b",   wLabel:"Soporte",    wClass:"badge-bp", pts:-1 },
+    ];
+
+    const selected = new Set();
+
+    function renderGrid(criteria, gridId, type) {
+      const grid = document.getElementById(gridId);
+      grid.innerHTML = '';
+      criteria.forEach(c => {
+        const isActive = selected.has(c.code);
+        const activeClass = isActive ? (type === 'path' ? ' active-path' : ' active-benign') : '';
+        const btn = document.createElement('button');
+        btn.className = 'crit-btn' + activeClass;
+        btn.setAttribute('aria-pressed', isActive);
+        btn.setAttribute('title', c.label);
+        btn.innerHTML = `
+          <span class="code">${c.code}</span>
+          <span class="weight-badge ${isActive ? '' : c.wClass}">${c.wLabel}</span>
+          <span class="desc">${c.label}</span>`;
+        btn.onclick = () => { toggle(c.code); };
+        grid.appendChild(btn);
+      });
+    }
+
+    function toggle(code) {
+      if (selected.has(code)) selected.delete(code);
+      else selected.add(code);
+      renderAll();
+    }
+
+    // ── MOTOR DE CLASIFICACIÓN ──
+    // Marco bayesiano de puntos de Tavtigian et al. 2018 (Genet Med 20:1054),
+    // adoptado por ClinGen SVI. Pesos: PVS=8, Fuerte=4, Moderado=2, Soporte=1
+    // (los benignos en negativo). Umbrales de puntuación combinada:
+    //   ≥ +10  Patogénica   |  +6 a +9  Prob. patogénica
+    //   0 a +5 VUS          |  −1 a −6  Prob. benigna  |  ≤ −7  Benigna
+    function classify() {
+      const selP = pathCriteria.filter(c => selected.has(c.code));
+      const selB = benignCriteria.filter(c => selected.has(c.code));
+      if (!selP.length && !selB.length) return null;
+
+      // BA1 es criterio autónomo (stand-alone) — clasifica Benigna por sí solo
+      const hasBA1 = selB.some(c => c.code === 'BA1');
+      if (hasBA1) return {
+        cls:'Benigna', short:'B', type:'B', score:null,
+        detail:'BA1 es un criterio autónomo (stand-alone): una frecuencia poblacional ≥5% clasifica la variante como Benigna por sí sola, con independencia de cualquier otro criterio (ACMG/AMP 2015; ClinGen SVI).',
+        selP, selB
+      };
+
+      // Suma de puntos (los pts benignos ya son negativos en los datos)
+      let score = 0;
+      selP.forEach(c => score += c.pts);
+      selB.forEach(c => score += c.pts);
+
+      let type, cls;
+      if      (score >= 10) { type='P';   cls='Patogénica'; }
+      else if (score >= 6)  { type='LP';  cls='Probablemente patogénica'; }
+      else if (score >= 0)  { type='VUS'; cls='VUS — Significado incierto'; }
+      else if (score >= -6) { type='LB';  cls='Probablemente benigna'; }
+      else                  { type='B';   cls='Benigna'; }
+
+      const signed = (score > 0 ? '+' : '') + score;
+      const conflict = selP.length && selB.length;
+      let detail;
+      if (type === 'VUS') {
+        detail = `Puntuación combinada de ${signed} punto${Math.abs(score)===1?'':'s'} (rango VUS: 0 a +5). La evidencia disponible no alcanza un umbral de clasificación definitiva; se requiere evidencia adicional o reanálisis.`;
+      } else {
+        detail = `Puntuación combinada de ${signed} punto${Math.abs(score)===1?'':'s'} según el marco bayesiano de Tavtigian et al. 2018, dentro del rango de ${cls.replace(' — Significado incierto','')}.`;
+      }
+      if (conflict) detail += ' Hay criterios patogénicos y benignos seleccionados: el sistema de puntos los integra cuantitativamente, pero la evidencia en conflicto debe revisarse caso por caso.';
+
+      return { cls, short:type, type, score, detail, selP, selB };
+    }
+
+    function renderSummary(res) {
+      const bar = document.getElementById('summary-bar');
+      if (!res) { bar.innerHTML = ''; return; }
+      const { selP, selB } = res;
+      let html = '';
+      if (selP.length) html += `<span class="sum-chip sum-chip-path">Patogénicos: ${selP.map(c=>c.code).join(' · ')}</span>`;
+      if (selB.length) html += `<span class="sum-chip sum-chip-benign">Benignos: ${selB.map(c=>c.code).join(' · ')}</span>`;
+      bar.innerHTML = html;
+    }
+
+    function renderResult(res) {
+      const area = document.getElementById('result-area');
+      if (!res) { area.innerHTML = '<p class="no-selection">Selecciona los criterios aplicables para clasificar la variante.</p>'; return; }
+      const themeMap = { P:'res-P', LP:'res-LP', VUS:'res-VUS', LB:'res-LB', B:'res-B' };
+      const isDark = ['P','LP','B'].includes(res.type);
+      const chipClass = isDark ? 'result-chip' : 'result-chip result-chip-dark';
+      const selP = res.selP || [];
+      const selB = res.selB || [];
+      const scoreChip = (res.score !== null && res.score !== undefined)
+        ? `<span class="${chipClass}">Puntuación: ${res.score > 0 ? '+' : ''}${res.score}</span>` : '';
+      area.innerHTML = `
+        <div class="result-card ${themeMap[res.type]}">
+          <div class="result-label-sm">Clasificación ACMG / AMP</div>
+          <div class="result-class-text">${res.cls}</div>
+          <div class="result-detail-text">${res.detail}</div>
+          <div class="result-chips">
+            ${scoreChip}
+            ${selP.length ? `<span class="${chipClass}">${selP.length} criterio${selP.length>1?'s':''} patogénico${selP.length>1?'s':''}</span>` : ''}
+            ${selB.length ? `<span class="${chipClass}">${selB.length} criterio${selB.length>1?'s':''} benigno${selB.length>1?'s':''}</span>` : ''}
+          </div>
+        </div>`;
+    }
+
+    function renderAll() {
+      renderGrid(pathCriteria, 'path-grid', 'path');
+      renderGrid(benignCriteria, 'benign-grid', 'benign');
+      const res = classify();
+      renderSummary(res);
+      renderResult(res);
+    }
+
+    function resetAll() {
+      selected.clear();
+      renderAll();
+    }
+
+    renderAll();
+  </script>
+</body>
+</html>
