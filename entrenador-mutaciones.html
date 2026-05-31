@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GenomiKmente · Entrenador de Mutaciones</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;0,900;1,500&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0D1B2A; --coral:#E8604A; --cream:#FAF8F5;
+    --ink:#1C2733; --grey:#5B6573; --line:#E4DED6;
+    --navy-tint:#EAEDF1; --coral-tint:#FBE3DD;
+    --ok:#2E7D5B; --ok-tint:#E2F1EA; --bad:#C0392B; --bad-tint:#FBE3DF;
+    --pur:#E8604A; --pyr:#2B5C8A;
+    --head:"Playfair Display", Georgia, "Times New Roman", serif;
+    --body:"DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --mono:"DM Sans", ui-monospace, monospace;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{background:var(--cream);}
+  body{font-family:var(--body); color:var(--ink); line-height:1.5; min-height:100vh;
+    padding:18px 14px 40px; display:flex; justify-content:center; -webkit-font-smoothing:antialiased;}
+  .wrap{width:100%; max-width:540px;}
+
+  .topbar{display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;}
+  .brand{display:flex; align-items:baseline; gap:8px;}
+  .brand .num{font-family:var(--head); font-weight:900; color:var(--coral); font-size:20px; line-height:1;}
+  .brand .tag{font-size:11px; letter-spacing:2.5px; font-weight:700; color:var(--grey); text-transform:uppercase;}
+  .scorebox{display:flex; gap:8px;}
+  .pill{background:var(--navy); color:var(--cream); border-radius:999px; padding:5px 11px; font-size:12px; font-weight:700; display:flex; align-items:center; gap:5px;}
+  .pill.streak{background:var(--coral);}
+  .pill .lab{opacity:.7; font-weight:500; letter-spacing:.5px;}
+
+  h1{font-family:var(--head); font-weight:900; color:var(--navy); font-size:30px; line-height:1.05; letter-spacing:-.5px; margin-bottom:6px;}
+  .sub{color:var(--grey); font-size:14px; margin-bottom:16px;}
+
+  .modes{display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px;}
+  .mode{flex:1 1 22%; min-width:108px; border:1.5px solid var(--line); background:#fff; border-radius:12px;
+    padding:9px 6px 8px; cursor:pointer; text-align:center; transition:.18s; font-family:var(--body);}
+  .mode:hover{border-color:var(--navy);}
+  .mode.active{background:var(--navy); border-color:var(--navy);}
+  .mode .mt{display:block; font-size:12.5px; font-weight:700; color:var(--navy); line-height:1.15;}
+  .mode.active .mt{color:#fff;}
+  .mode .md{display:block; font-size:10px; color:var(--grey); margin-top:3px;}
+  .mode.active .md{color:#C7CDD6;}
+
+  .examstart{width:100%; border:1.5px dashed var(--coral); background:#fff; color:var(--coral);
+    font-family:var(--body); font-weight:700; font-size:14px; padding:11px; border-radius:12px;
+    cursor:pointer; margin-bottom:18px; transition:.15s;}
+  .examstart:hover{background:var(--coral-tint);}
+  .examstart.active{background:var(--coral); color:#fff; border-style:solid;}
+
+  .progress{display:none; margin:-8px 0 16px;}
+  .pbar{height:8px; background:var(--navy-tint); border-radius:999px; overflow:hidden;}
+  .pfill{height:100%; width:0; background:var(--coral); border-radius:999px; transition:width .35s;}
+  .plabel{font-size:11.5px; color:var(--grey); font-weight:700; margin-top:6px; text-align:right;}
+
+  .card{background:#fff; border:1px solid var(--line); border-radius:18px; padding:20px 18px;
+    box-shadow:0 10px 30px -18px rgba(13,27,42,.35);}
+  .qlabel{font-size:11px; letter-spacing:2px; font-weight:700; text-transform:uppercase; color:var(--coral); margin-bottom:8px;}
+  .qtext{font-size:16px; color:var(--ink); margin-bottom:16px;}
+  .qtext b{color:var(--navy);}
+
+  .seqrow{display:flex; flex-wrap:wrap; align-items:flex-start; gap:10px; justify-content:center; margin:6px 0 14px;}
+  .codon{display:flex; flex-direction:column; align-items:center; gap:5px;}
+  .codon .bases{display:flex; gap:3px;}
+  .nt{width:30px; height:36px; border-radius:7px; display:flex; align-items:center; justify-content:center;
+    font-family:var(--mono); font-weight:700; font-size:17px; color:#fff; background:var(--pyr); transition:transform .25s, background .25s;}
+  .nt.pur{background:var(--pur);} .nt.pyr{background:var(--pyr);} .nt.dim{background:#C9CFD7; color:#fff;}
+  .nt.changed{outline:3px solid var(--navy); outline-offset:1px; animation:pop .35s ease;}
+  @keyframes pop{0%{transform:scale(.6);}60%{transform:scale(1.15);}100%{transform:scale(1);}}
+  .aa{font-size:11px; color:var(--grey); font-weight:600; white-space:nowrap; min-height:14px;}
+  .aa.stop{color:var(--coral); font-weight:700;}
+  .arrow{align-self:center; font-size:22px; color:var(--navy); padding:0 2px; margin-top:6px;}
+  .caption{text-align:center; font-size:11px; letter-spacing:1px; text-transform:uppercase; color:var(--grey); font-weight:700; margin:2px 0 2px;}
+
+  .casebox{background:var(--coral-tint); border-radius:13px; padding:15px 16px; margin:2px 0 16px;}
+  .casebox .cl{font-size:11px; letter-spacing:2px; font-weight:700; text-transform:uppercase; color:var(--coral); margin-bottom:6px;}
+  .casebox .ct{font-size:15.5px; color:var(--navy); line-height:1.5; font-weight:500;}
+  .casebox .ct code{font-family:var(--mono); background:rgba(13,27,42,.08); padding:1px 5px; border-radius:4px; font-weight:700;}
+  .casebox .ct i{color:var(--ink); font-style:italic;}
+
+  .legend{display:flex; gap:16px; justify-content:center; font-size:11.5px; color:var(--grey); margin:-4px 0 14px;}
+  .legend span{display:flex; align-items:center; gap:6px;}
+  .dot{width:11px; height:11px; border-radius:3px;}
+  .dot.pur{background:var(--pur);} .dot.pyr{background:var(--pyr);}
+
+  .opts{display:flex; flex-direction:column; gap:8px;}
+  .opt{border:1.5px solid var(--line); background:#fff; border-radius:12px; padding:12px 14px; text-align:left;
+    cursor:pointer; font-family:var(--body); font-size:14.5px; font-weight:600; color:var(--navy); transition:.15s;
+    display:flex; align-items:center; gap:10px; width:100%;}
+  .opt:hover:not(:disabled){border-color:var(--navy); transform:translateX(2px);}
+  .opt:disabled{cursor:default;}
+  .opt .badge{font-size:11px; font-weight:700; width:22px; height:22px; border-radius:6px; background:var(--navy-tint);
+    color:var(--navy); display:flex; align-items:center; justify-content:center; flex:0 0 auto;}
+  .opt.selected{border-color:var(--navy); background:var(--navy-tint);}
+  .opt.selected .badge{background:var(--navy); color:#fff;}
+  .opt.correct{border-color:var(--ok); background:var(--ok-tint);}
+  .opt.correct .badge{background:var(--ok); color:#fff;}
+  .opt.wrong{border-color:var(--bad); background:var(--bad-tint);}
+  .opt.wrong .badge{background:var(--bad); color:#fff;}
+
+  .fb{margin-top:14px; border-radius:13px; padding:14px 15px; font-size:13.5px; line-height:1.55; display:none;}
+  .fb.show{display:block; animation:fade .3s ease;}
+  .fb.good{background:var(--ok-tint); border:1px solid #BFE0CF;}
+  .fb.poor{background:var(--bad-tint); border:1px solid #F0C8C2;}
+  .fb .verdict{font-weight:700; font-size:14px; margin-bottom:5px; display:flex; align-items:center; gap:7px;}
+  .fb.good .verdict{color:var(--ok);} .fb.poor .verdict{color:var(--bad);}
+  .fb code{font-family:var(--mono); background:rgba(13,27,42,.07); padding:1px 5px; border-radius:4px; font-weight:700; color:var(--navy);}
+  @keyframes fade{from{opacity:0; transform:translateY(4px);}to{opacity:1; transform:none;}}
+
+  .nextbtn{margin-top:14px; width:100%; border:none; background:var(--coral); color:#fff; font-family:var(--body);
+    font-weight:700; font-size:15px; padding:13px; border-radius:12px; cursor:pointer; transition:.15s; display:none;}
+  .nextbtn.show{display:block;} .nextbtn:hover:not(:disabled){background:#d34e38;}
+  .nextbtn:disabled{opacity:.4; cursor:default;}
+
+  .reftoggle{margin-top:14px; text-align:center;}
+  .reftoggle button{background:none; border:none; color:var(--grey); font-family:var(--body); font-size:12.5px; cursor:pointer; text-decoration:underline; text-underline-offset:3px;}
+  .reftable{display:none; margin-top:10px; font-size:11px; color:var(--ink); background:var(--navy-tint); border-radius:12px; padding:12px;}
+  .reftable.show{display:block;}
+  .reftable .grid{display:grid; grid-template-columns:repeat(4,1fr); gap:4px 8px;}
+  .reftable .cell{font-family:var(--mono);}
+  .reftable .cell b{color:var(--navy);}
+  .reftable .stoprow{color:var(--coral); font-weight:700; margin-top:8px;}
+
+  /* results */
+  #results{display:none;}
+  .scorecard{text-align:center; padding:8px 0 16px; border-bottom:1px solid var(--line); margin-bottom:16px;}
+  .bignum{font-family:var(--head); font-weight:900; color:var(--navy); font-size:64px; line-height:1;}
+  .bignum span{color:var(--grey); font-size:30px;}
+  .band{font-size:15px; font-weight:700; color:var(--coral); margin-top:6px;}
+  .pct{font-size:12.5px; color:var(--grey); margin-top:2px;}
+  .bytopic{margin-bottom:16px;}
+  .bythead{font-size:11px; letter-spacing:2px; font-weight:700; text-transform:uppercase; color:var(--grey); margin-bottom:8px;}
+  .byrow{display:flex; align-items:center; justify-content:space-between; font-size:13px; padding:5px 0; border-bottom:1px dashed var(--line);}
+  .byrow .bt{color:var(--navy); font-weight:600;}
+  .byrow .bv{font-weight:700; font-family:var(--mono);}
+  .reviewhead{font-size:11px; letter-spacing:2px; font-weight:700; text-transform:uppercase; color:var(--coral); margin:4px 0 10px;}
+  .ritem{border:1px solid var(--line); border-left:4px solid var(--bad); border-radius:10px; padding:12px 13px; margin-bottom:10px;}
+  .ritem .rlabel{font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:var(--grey); font-weight:700; margin-bottom:5px;}
+  .ritem .rprompt{font-size:13.5px; color:var(--navy); margin-bottom:8px; line-height:1.45;}
+  .ritem .rprompt code{font-family:var(--mono); background:rgba(13,27,42,.07); padding:1px 4px; border-radius:4px; font-weight:700;}
+  .ritem .rprompt i{font-style:italic;}
+  .ritem .line{font-size:12.5px; margin:2px 0;}
+  .ritem .line .x{color:var(--bad); font-weight:700;}
+  .ritem .line .ok{color:var(--ok); font-weight:700;}
+  .ritem .rexp{font-size:12.5px; color:var(--ink); margin-top:7px; background:var(--cream); border-radius:8px; padding:9px 10px; line-height:1.5;}
+  .ritem .rexp code{font-family:var(--mono); background:rgba(13,27,42,.08); padding:1px 4px; border-radius:4px; font-weight:700; color:var(--navy);}
+  .perfect{background:var(--ok-tint); border:1px solid #BFE0CF; border-radius:12px; padding:14px; text-align:center; font-size:14px; color:var(--ok); font-weight:600;}
+  .resultbtns{display:flex; gap:8px; margin-top:16px;}
+  .resultbtns button{flex:1; font-family:var(--body); font-weight:700; font-size:14px; padding:12px; border-radius:12px; cursor:pointer; transition:.15s;}
+  #retry{border:none; background:var(--coral); color:#fff;} #retry:hover{background:#d34e38;}
+  #topractice{border:1.5px solid var(--navy); background:#fff; color:var(--navy);} #topractice:hover{background:var(--navy-tint);}
+
+  .footer{margin-top:18px; padding-top:12px; border-top:2px solid var(--navy); display:flex; align-items:center; justify-content:space-between;}
+  .footer .gm{font-family:var(--head); font-weight:900; letter-spacing:2px; color:var(--navy); font-size:13px;}
+  .footer .by{font-size:11px; color:var(--grey);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topbar">
+    <div class="brand"><span class="num">/</span><span class="tag">Entrenador de Mutaciones</span></div>
+    <div class="scorebox" id="scorebox">
+      <div class="pill"><span class="lab">Aciertos</span><span id="score">0/0</span></div>
+      <div class="pill streak"><span class="lab">Racha</span><span id="streak">0</span></div>
+    </div>
+  </div>
+
+  <h1>Practica los tipos de mutaciones</h1>
+  <p class="sub">Cada pregunta se genera y se corrige con la tabla del código genético. Elige un modo y clasifica.</p>
+
+  <div class="modes" id="modes">
+    <div class="mode active" data-mode="base"><span class="mt">Transición /<br>Transversión</span><span class="md">nivel base</span></div>
+    <div class="mode" data-mode="snv"><span class="mt">Efecto en la<br>proteína</span><span class="md">SNV codificante</span></div>
+    <div class="mode" data-mode="indel"><span class="mt">Marco de<br>lectura</span><span class="md">indels</span></div>
+    <div class="mode" data-mode="level"><span class="mt">Identifica<br>el nivel</span><span class="md">escala</span></div>
+  </div>
+
+  <button class="examstart" id="examStart">◷ Modo examen · 10 preguntas mezcladas</button>
+
+  <div class="progress" id="progress">
+    <div class="pbar"><div class="pfill" id="pfill"></div></div>
+    <div class="plabel" id="plabel"></div>
+  </div>
+
+  <div class="card">
+    <div id="quiz">
+      <div class="qlabel" id="qlabel"></div>
+      <div class="qtext" id="qtext"></div>
+      <div id="visual"></div>
+      <div class="legend" id="legend" style="display:none">
+        <span><span class="dot pur"></span> Purina (A, G)</span>
+        <span><span class="dot pyr"></span> Pirimidina (C, U)</span>
+      </div>
+      <div class="opts" id="opts"></div>
+      <div class="fb" id="fb"></div>
+      <button class="nextbtn" id="next">Siguiente pregunta →</button>
+      <div class="reftoggle" id="reftoggle" style="display:none">
+        <button id="reftbtn">Mostrar tabla de codones</button>
+        <div class="reftable" id="reftable"></div>
+      </div>
+    </div>
+    <div id="results"></div>
+  </div>
+
+  <div class="footer">
+    <span class="gm">GENOMIKMENTE</span>
+    <span class="by">by Lidia Segura · @genomikmente</span>
+  </div>
+</div>
+
+<script>
+/* ===== genetic code engine ===== */
+const CODON = {
+UUU:'F',UUC:'F',UUA:'L',UUG:'L',CUU:'L',CUC:'L',CUA:'L',CUG:'L',
+AUU:'I',AUC:'I',AUA:'I',AUG:'M',GUU:'V',GUC:'V',GUA:'V',GUG:'V',
+UCU:'S',UCC:'S',UCA:'S',UCG:'S',CCU:'P',CCC:'P',CCA:'P',CCG:'P',
+ACU:'T',ACC:'T',ACA:'T',ACG:'T',GCU:'A',GCC:'A',GCA:'A',GCG:'A',
+UAU:'Y',UAC:'Y',UAA:'*',UAG:'*',CAU:'H',CAC:'H',CAA:'Q',CAG:'Q',
+AAU:'N',AAC:'N',AAA:'K',AAG:'K',GAU:'D',GAC:'D',GAA:'E',GAG:'E',
+UGU:'C',UGC:'C',UGA:'*',UGG:'W',CGU:'R',CGC:'R',CGA:'R',CGG:'R',
+AGU:'S',AGC:'S',AGA:'R',AGG:'R',GGU:'G',GGC:'G',GGA:'G',GGG:'G'
+};
+const AA_ES = {F:'Fenilalanina',L:'Leucina',I:'Isoleucina',M:'Metionina',V:'Valina',
+S:'Serina',P:'Prolina',T:'Treonina',A:'Alanina',Y:'Tirosina',H:'Histidina',
+Q:'Glutamina',N:'Asparagina',K:'Lisina',D:'Ácido aspártico',E:'Ácido glutámico',
+C:'Cisteína',W:'Triptófano',R:'Arginina',G:'Glicina','*':'STOP'};
+const BASES=['A','U','G','C'];
+const PUR=new Set(['A','G']), PYR=new Set(['C','U']);
+const rnd = a => a[Math.floor(Math.random()*a.length)];
+const isPur = b => PUR.has(b);
+
+function singleMutants(codon){
+  const out={synonymous:[],missense:[],nonsense:[]};
+  for(let i=0;i<3;i++) for(const b of BASES){
+    if(b===codon[i]) continue;
+    const m=codon.slice(0,i)+b+codon.slice(i+1);
+    const cls = CODON[m]==='*' ? 'nonsense' : (CODON[m]===CODON[codon]?'synonymous':'missense');
+    out[cls].push({codon:m,pos:i});
+  }
+  return out;
+}
+const SENSE = Object.keys(CODON).filter(c=>CODON[c]!=='*');
+function translate(seq){
+  let p=[];
+  for(let i=0;i+3<=seq.length;i+=3){const aa=CODON[seq.substr(i,3)]; p.push(aa); if(aa==='*')break;}
+  return p;
+}
+
+/* ===== state ===== */
+let mode='base', correct=0, total=0, streak=0, locked=false, current=null, exam=null;
+
+/* ===== render helpers ===== */
+function codonBlock(codon, opts={}){
+  const {showAA=true, changedPos=-1} = opts;
+  let bases='';
+  for(let i=0;i<3;i++){
+    let cls = isPur(codon[i])?'pur':'pyr';
+    if(i===changedPos) cls += ' changed';
+    bases += '<div class="nt '+cls+'">'+codon[i]+'</div>';
+  }
+  const aa = CODON[codon];
+  const aaHtml = showAA ? '<div class="aa '+(aa==='*'?'stop':'')+'">'+(aa==='*'?'STOP':AA_ES[aa])+'</div>' : '<div class="aa">&nbsp;</div>';
+  return '<div class="codon"><div class="bases">'+bases+'</div>'+aaHtml+'</div>';
+}
+
+/* ===== generators ===== */
+function genBase(){
+  const seqLen=5, seq=[];
+  for(let i=0;i<seqLen;i++) seq.push(rnd(BASES));
+  const pos=Math.floor(Math.random()*seqLen);
+  const orig=seq[pos];
+  const wantTransition=Math.random()<0.5;
+  let pool = BASES.filter(b=>b!==orig && (wantTransition ? (isPur(b)===isPur(orig)) : (isPur(b)!==isPur(orig))));
+  const nb=rnd(pool);
+  const isTransition = isPur(nb)===isPur(orig);
+  const mut=[...seq]; mut[pos]=nb;
+  return {
+    type:'base', label:'Nivel base · sustitución',
+    qtext:'Una sola base cambia de <b>'+orig+'</b> a <b>'+nb+'</b>. ¿Qué tipo de sustitución es?',
+    seq, mut, pos,
+    answer: isTransition?'Transición':'Transversión',
+    options:['Transición','Transversión'],
+    explain: isTransition
+      ? '<b>Transición.</b> <code>'+orig+'→'+nb+'</code> ocurre dentro de la misma clase química ('+(isPur(orig)?'purina→purina':'pirimidina→pirimidina')+'). Son las más frecuentes.'
+      : '<b>Transversión.</b> <code>'+orig+'→'+nb+'</code> cruza de '+(isPur(orig)?'purina a pirimidina':'pirimidina a purina')+'. Menos frecuentes, proporcionalmente más disruptivas.'
+  };
+}
+
+function genSNV(){
+  const target = rnd(['synonymous','synonymous','missense','missense','missense','nonsense','nonsense']);
+  let codon, choice;
+  for(let tries=0; tries<200; tries++){
+    codon = rnd(SENSE);
+    const m = singleMutants(codon);
+    if(m[target].length){ choice = rnd(m[target]); break; }
+  }
+  if(!choice){ codon='CAA'; choice={codon:'UAA',pos:0}; }
+  const cls = CODON[choice.codon]==='*' ? 'nonsense' : (CODON[choice.codon]===CODON[codon]?'synonymous':'missense');
+  const labelMap={synonymous:'Sinónima (silenciosa)', missense:'Missense (cambio de sentido)', nonsense:'Nonsense (sin sentido)'};
+  const origAA=CODON[codon], mutAA=CODON[choice.codon];
+  let explain;
+  if(cls==='synonymous') explain='<b>Sinónima.</b> <code>'+codon+'→'+choice.codon+'</code>: ambos codifican <b>'+AA_ES[origAA]+'</b>. El aminoácido no cambia, pero puede afectar splicing o estabilidad del ARNm.';
+  else if(cls==='missense') explain='<b>Missense.</b> <code>'+codon+'→'+choice.codon+'</code>: <b>'+AA_ES[origAA]+' → '+AA_ES[mutAA]+'</b>. Cambia el aminoácido; el impacto depende de cuán similar sea el nuevo residuo.';
+  else explain='<b>Nonsense.</b> <code>'+codon+'→'+choice.codon+'</code>: <b>'+AA_ES[origAA]+' → STOP</b>. Codón de parada prematuro → proteína truncada, a menudo degradada por NMD.';
+  return {
+    type:'snv', label:'SNV codificante · efecto en la proteína',
+    qtext:'El codón <b>'+codon+'</b> ('+AA_ES[origAA]+') sufre una sustitución de una base y se convierte en <b>'+choice.codon+'</b>. ¿Qué tipo de efecto produce?',
+    codon, mutCodon:choice.codon, pos:choice.pos,
+    answer: labelMap[cls],
+    options:['Sinónima (silenciosa)','Missense (cambio de sentido)','Nonsense (sin sentido)'],
+    explain
+  };
+}
+
+function genIndel(){
+  const n = 3 + Math.floor(Math.random()*2);
+  let codons=['AUG'];
+  for(let i=0;i<n;i++) codons.push(rnd(SENSE.filter(c=>c!=='AUG')));
+  let tail = rnd(['UGAC','UAAC','UAGU','GGAU','CUAU']);
+  let seq = codons.join('') + tail;
+  const isIns = Math.random()<0.5;
+  let kk = 1 + Math.floor(Math.random()*5);
+  if(Math.random()<0.4) kk = 3*(1+Math.floor(Math.random()*2));
+  const pos = 3 + 3*Math.floor(Math.random()*(codons.length-1));
+  let mut, insBases='';
+  if(isIns){ for(let i=0;i<kk;i++) insBases+=rnd(BASES); mut = seq.slice(0,pos)+insBases+seq.slice(pos); }
+  else { insBases = seq.slice(pos,pos+kk); mut = seq.slice(0,pos)+seq.slice(pos+kk); }
+  const frameshift = (kk%3)!==0;
+  const protOrig=translate(seq).map(a=>a==='*'?'STOP':a).join('-');
+  const protMut=translate(mut).map(a=>a==='*'?'STOP':a).join('-');
+  return {
+    type:'indel', label:'Indel · marco de lectura',
+    qtext:'Se '+(isIns?'<b>insertan</b>':'<b>eliminan</b>')+' <b>'+kk+' '+(kk===1?'base':'bases')+'</b> en una secuencia codificante. ¿Qué ocurre con el marco de lectura?',
+    seq,
+    answer: frameshift?'Frameshift (se desplaza el marco)':'In-frame (se conserva el marco)',
+    options:['Frameshift (se desplaza el marco)','In-frame (se conserva el marco)'],
+    explain: frameshift
+      ? '<b>Frameshift.</b> '+kk+' no es múltiplo de 3, así que todos los codones después del cambio se re-leen en otro marco. Proteína: <code>'+protOrig+'</code> → <code>'+protMut+'</code>. Consecuencias habitualmente severas.'
+      : '<b>In-frame.</b> '+kk+' es múltiplo de 3: se '+(isIns?'añaden':'quitan')+' '+(kk/3)+' '+(kk/3===1?'aminoácido':'aminoácidos')+' sin desplazar el marco. Proteína: <code>'+protOrig+'</code> → <code>'+protMut+'</code>. Efecto variable, normalmente menos drástico.'
+  };
+}
+
+/* ===== level (escala) bank ===== */
+const LEVEL_BANK=[
+ {lvl:'genica', s:'Una variante <code>c.1521_1523delCTT</code> en <i>CFTR</i> elimina una fenilalanina (\u0394F508), sin desplazar el marco de lectura.',
+  e:'<b>Génica.</b> Deleción in-frame de 3 nucleótidos dentro de un gen: actúa a escala de nucleótidos, no sobre la estructura del cromosoma.'},
+ {lvl:'genica', s:'Variante sin sentido <code>p.Arg1162*</code> que introduce un codón de parada prematuro en <i>CFTR</i>.',
+  e:'<b>Génica.</b> Cambio puntual que genera un codón stop (nonsense): mutación a nivel de un nucleótido.'},
+ {lvl:'genica', s:'Expansión de más de 200 repeticiones <code>CGG</code> en la región 5\u2032UTR de <i>FMR1</i> (X frágil).',
+  e:'<b>Génica.</b> Las expansiones de repeticiones son mutaciones dinámicas dentro de un gen — pequeña escala, aunque inestables entre generaciones.'},
+ {lvl:'genica', s:'Variante en el sitio donador de splicing <code>c.4096+1G&gt;T</code> en <i>BRCA1</i>.',
+  e:'<b>Génica.</b> Afecta un nucleótido en un sitio canónico de splicing; altera el procesamiento del ARNm sin tocar la estructura cromosómica.'},
+ {lvl:'genica', s:'Sustitución missense <code>p.Gly12Asp</code> en <i>KRAS</i>, detectada como variante somática en un tumor.',
+  e:'<b>Génica.</b> Cambio de un solo aminoácido por una sustitución puntual.'},
+ {lvl:'genica', s:'Inserción de 1 base en el exón 2 de un gen, que desplaza el marco de lectura.',
+  e:'<b>Génica.</b> Indel con frameshift: opera a nivel de nucleótidos dentro del gen.'},
+ {lvl:'cromosomica', s:'Deleción <code>22q11.2</code> de ~3 Mb (síndrome de DiGeorge), detectada por array cromosómico.',
+  e:'<b>Cromosómica estructural.</b> Microdeleción / CNV: pérdida de un segmento, intermedia entre la SNV y el reordenamiento visible al cariotipo.'},
+ {lvl:'cromosomica', s:'Translocación recíproca <code>t(9;22)(q34;q11)</code> — cromosoma Filadelfia.',
+  e:'<b>Cromosómica estructural.</b> Intercambio de segmentos entre dos cromosomas; el número total no cambia, sí la estructura.'},
+ {lvl:'cromosomica', s:'Translocación robertsoniana entre los cromosomas 14 y 21 en un progenitor sano.',
+  e:'<b>Cromosómica estructural.</b> Fusión de dos cromosomas acrocéntricos: reordenamiento estructural (portador equilibrado).'},
+ {lvl:'cromosomica', s:'Duplicación <code>17p12</code> (~1.4 Mb) que abarca <i>PMP22</i> (CMT1A).',
+  e:'<b>Cromosómica estructural.</b> Ganancia de un segmento (CNV por duplicación), detectable por array o MLPA.'},
+ {lvl:'cromosomica', s:'Inversión pericéntrica del cromosoma 9, <code>inv(9)(p12q13)</code>.',
+  e:'<b>Cromosómica estructural.</b> Un segmento se invierte incluyendo el centrómero; reordenamiento estructural (a menudo variante benigna).'},
+ {lvl:'cromosomica', s:'Cromosoma en anillo 14, <code>r(14)</code>, tras pérdida de los extremos.',
+  e:'<b>Cromosómica estructural.</b> Reconfiguración estructural en anillo de un cromosoma.'},
+ {lvl:'cromosomica', s:'Isocromosoma del brazo largo del X, <code>i(Xq)</code>.',
+  e:'<b>Cromosómica estructural.</b> Cromosoma con dos copias del mismo brazo: reordenamiento estructural.'},
+ {lvl:'genomica', s:'Cariotipo <code>47,XX,+21</code>: tres copias del cromosoma 21 (síndrome de Down).',
+  e:'<b>Genómica (numérica).</b> Trisomía: cambio en el número de cromosomas completos, por no disyunción.'},
+ {lvl:'genomica', s:'Cariotipo <code>45,X</code> (síndrome de Turner).',
+  e:'<b>Genómica (numérica).</b> Monosomía de un cromosoma sexual completo.'},
+ {lvl:'genomica', s:'Cariotipo <code>47,XXY</code> (síndrome de Klinefelter).',
+  e:'<b>Genómica (numérica).</b> Aneuploidía de cromosomas sexuales: un cromosoma completo de más.'},
+ {lvl:'genomica', s:'Cariotipo <code>69,XXY</code> en una pérdida gestacional.',
+  e:'<b>Genómica (numérica).</b> Triploidía: un juego cromosómico completo extra (poliploidía).'},
+ {lvl:'genomica', s:'Trisomía 18, <code>47,XX,+18</code> (síndrome de Edwards).',
+  e:'<b>Genómica (numérica).</b> Cromosoma 18 completo en triple copia.'},
+ {lvl:'genomica', s:'Trisomía 13, <code>47,XY,+13</code> (síndrome de Patau).',
+  e:'<b>Genómica (numérica).</b> Aneuploidía: tres copias del cromosoma 13 completo.'},
+];
+let lastLevel=-1;
+function genLevel(){
+  let i; do{ i=Math.floor(Math.random()*LEVEL_BANK.length); } while(i===lastLevel && LEVEL_BANK.length>1);
+  lastLevel=i;
+  const item=LEVEL_BANK[i];
+  const map={genica:'Génica', cromosomica:'Cromosómica estructural', genomica:'Genómica (numérica)'};
+  return {
+    type:'level', label:'Escala de la mutación · génica / cromosómica / genómica',
+    qtext:'Clasifica esta mutación según su <b>escala</b>:',
+    scenario:item.s,
+    answer:map[item.lvl],
+    options:['Génica','Cromosómica estructural','Genómica (numérica)'],
+    explain:item.e
+  };
+}
+function genFor(m){ return m==='base'?genBase() : m==='snv'?genSNV() : m==='indel'?genIndel() : genLevel(); }
+
+/* ===== visuals ===== */
+function renderVisual(q){
+  const v=document.getElementById('visual');
+  const legend=document.getElementById('legend');
+  legend.style.display = (q.type==='base')?'flex':'none';
+
+  if(q.type==='level'){
+    v.innerHTML = '<div class="casebox"><div class="cl">Caso</div><div class="ct">'+q.scenario+'</div></div>';
+    return;
+  }
+  if(q.type==='base'){
+    let orig='', mut='';
+    q.seq.forEach((b,i)=> orig += '<div class="nt '+(i===q.pos?'changed ':'')+(isPur(b)?'pur':'pyr')+'">'+b+'</div>');
+    q.mut.forEach((b,i)=> mut += '<div class="nt '+(i===q.pos?'changed ':'')+(isPur(b)?'pur':'pyr')+'">'+b+'</div>');
+    v.innerHTML = '<div class="seqrow"><div class="codon"><div class="caption">Original</div><div class="bases">'+orig+
+      '</div></div><div class="arrow">→</div><div class="codon"><div class="caption">Mutada</div><div class="bases">'+mut+'</div></div></div>';
+  }
+  else if(q.type==='snv'){
+    v.innerHTML = '<div class="seqrow">'+codonBlock(q.codon,{showAA:true})+'<div class="arrow">→</div>'+
+      codonBlock(q.mutCodon,{showAA:false, changedPos:q.pos})+'</div><div class="caption">Predice el efecto antes de revelar el aminoácido</div>';
+  }
+  else { // indel
+    let h='';
+    const s=q.seq;
+    for(let i=0;i<s.length;i+=3){ let bs=''; for(let j=i;j<i+3 && j<s.length;j++){ bs+='<div class="nt '+(isPur(s[j])?'pur':'pyr')+'">'+s[j]+'</div>'; } h+='<div class="codon"><div class="bases">'+bs+'</div></div>'; }
+    v.innerHTML = '<div class="caption">Secuencia original (codones)</div><div class="seqrow">'+h+'</div>';
+  }
+}
+function renderVisualRevealSNV(q){
+  document.getElementById('visual').innerHTML = '<div class="seqrow">'+codonBlock(q.codon,{showAA:true})+
+    '<div class="arrow">→</div>'+codonBlock(q.mutCodon,{showAA:true, changedPos:q.pos})+'</div>';
+}
+
+/* ===== practice flow ===== */
+function newQuestion(){
+  locked=false;
+  current = genFor(mode);
+  document.getElementById('qlabel').textContent = current.label;
+  document.getElementById('qtext').innerHTML = current.qtext;
+  renderVisual(current);
+  const opts=document.getElementById('opts'); opts.innerHTML='';
+  current.options.forEach((o,i)=>{
+    const b=document.createElement('button');
+    b.className='opt'; b.innerHTML='<span class="badge">'+String.fromCharCode(65+i)+'</span><span>'+o+'</span>';
+    b.onclick=()=>answer(o,b);
+    opts.appendChild(b);
+  });
+  const fb=document.getElementById('fb'); fb.className='fb'; fb.innerHTML='';
+  const nb=document.getElementById('next'); nb.className='nextbtn'; nb.disabled=false; nb.textContent='Siguiente pregunta →';
+  document.getElementById('reftoggle').style.display = (mode==='snv')?'block':'none';
+}
+function answer(choice, btn){
+  if(locked) return; locked=true;
+  total++;
+  const right = choice===current.answer;
+  if(right){ correct++; streak++; } else { streak=0; }
+  document.querySelectorAll('.opt').forEach(o=>{
+    o.disabled=true;
+    const label=o.querySelector('span:last-child').textContent;
+    if(label===current.answer) o.classList.add('correct');
+    else if(o===btn && !right) o.classList.add('wrong');
+  });
+  if(current.type==='snv') renderVisualRevealSNV(current);
+  const fb=document.getElementById('fb');
+  fb.className='fb show '+(right?'good':'poor');
+  fb.innerHTML='<div class="verdict">'+(right?'✓ Correcto':'✗ No exactamente')+'</div>'+current.explain;
+  document.getElementById('next').className='nextbtn show';
+  document.getElementById('score').textContent=correct+'/'+total;
+  document.getElementById('streak').textContent=streak;
+}
+
+/* ===== exam flow ===== */
+function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));const t=a[i];a[i]=a[j];a[j]=t;} return a; }
+function startExam(){
+  const modesList=['base','snv','indel','level'];
+  let qs=[];
+  modesList.forEach(m=> qs.push(genFor(m)));      // guarantee one of each
+  while(qs.length<10) qs.push(genFor(rnd(modesList)));
+  shuffle(qs);
+  exam={qs, idx:0, answers:new Array(10).fill(null)};
+  document.querySelectorAll('.mode').forEach(x=>x.classList.remove('active'));
+  document.getElementById('examStart').classList.add('active');
+  document.getElementById('examStart').textContent='✕ Salir del examen';
+  document.getElementById('progress').style.display='block';
+  document.getElementById('scorebox').style.display='none';
+  document.getElementById('results').style.display='none';
+  document.getElementById('quiz').style.display='block';
+  renderExamQ();
+}
+function exitExam(){
+  exam=null;
+  document.getElementById('examStart').classList.remove('active');
+  document.getElementById('examStart').textContent='◷ Modo examen · 10 preguntas mezcladas';
+  document.getElementById('progress').style.display='none';
+  document.getElementById('scorebox').style.display='flex';
+  document.getElementById('results').style.display='none';
+  document.getElementById('quiz').style.display='block';
+  document.querySelector('.mode[data-mode="'+mode+'"]').classList.add('active');
+  newQuestion();
+}
+function updateProgress(){
+  document.getElementById('pfill').style.width = ((exam.idx)/10*100)+'%';
+  document.getElementById('plabel').textContent = 'Pregunta '+(exam.idx+1)+' de 10';
+}
+function renderExamQ(){
+  const q=exam.qs[exam.idx]; current=q;
+  updateProgress();
+  document.getElementById('qlabel').textContent = 'Examen · '+q.label;
+  document.getElementById('qtext').innerHTML = q.qtext;
+  renderVisual(q);
+  const opts=document.getElementById('opts'); opts.innerHTML='';
+  q.options.forEach((o,i)=>{
+    const b=document.createElement('button');
+    b.className='opt'+(exam.answers[exam.idx]===o?' selected':'');
+    b.innerHTML='<span class="badge">'+String.fromCharCode(65+i)+'</span><span>'+o+'</span>';
+    b.onclick=()=>examPick(o,b);
+    opts.appendChild(b);
+  });
+  document.getElementById('fb').className='fb';
+  document.getElementById('reftoggle').style.display=(q.type==='snv')?'block':'none';
+  document.getElementById('reftable').classList.remove('show');
+  document.getElementById('reftbtn').textContent='Mostrar tabla de codones';
+  const nb=document.getElementById('next');
+  nb.className='nextbtn show';
+  nb.textContent = exam.idx===9 ? 'Ver resultados →' : 'Siguiente →';
+  nb.disabled = exam.answers[exam.idx]===null;
+}
+function examPick(o, btn){
+  exam.answers[exam.idx]=o;
+  document.querySelectorAll('.opt').forEach(x=>x.classList.remove('selected'));
+  btn.classList.add('selected');
+  document.getElementById('next').disabled=false;
+}
+function showResults(){
+  document.getElementById('pfill').style.width='100%';
+  let correctN=0; const wrong=[];
+  const byType={base:[0,0],snv:[0,0],indel:[0,0],level:[0,0]};
+  exam.qs.forEach((q,i)=>{
+    const a=exam.answers[i];
+    byType[q.type][1]++;
+    if(a===q.answer){ correctN++; byType[q.type][0]++; }
+    else wrong.push({q,a});
+  });
+  const pct=Math.round(correctN/10*100);
+  let band;
+  if(correctN>=9) band='Excelente — dominas la clasificación.';
+  else if(correctN>=7) band='Muy bien — repasa los detalles marcados.';
+  else if(correctN>=5) band='Vas bien — refuerza con los modos de práctica.';
+  else band='A repasar — vuelve a los modos de práctica.';
+
+  const tLabel={base:'Transición / transversión', snv:'Efecto en la proteína', indel:'Marco de lectura', level:'Escala de la mutación'};
+  let byHtml='';
+  ['base','snv','indel','level'].forEach(t=>{ if(byType[t][1]>0) byHtml+='<div class="byrow"><span class="bt">'+tLabel[t]+'</span><span class="bv">'+byType[t][0]+'/'+byType[t][1]+'</span></div>'; });
+
+  let reviewHtml;
+  if(wrong.length===0){
+    reviewHtml='<div class="perfect">✓ Sin errores. Nivel carrusel — listo para enseñar esto tú misma.</div>';
+  } else {
+    reviewHtml='<div class="reviewhead">Repaso de errores ('+wrong.length+')</div>';
+    wrong.forEach(({q,a})=>{
+      const prompt = (q.type==='level') ? q.scenario : q.qtext;
+      reviewHtml+='<div class="ritem"><div class="rlabel">'+q.label+'</div>'+
+        '<div class="rprompt">'+prompt+'</div>'+
+        '<div class="line"><span class="x">Tu respuesta:</span> '+(a?a:'Sin responder')+'</div>'+
+        '<div class="line"><span class="ok">Correcta:</span> '+q.answer+'</div>'+
+        '<div class="rexp">'+q.explain+'</div></div>';
+    });
+  }
+
+  document.getElementById('quiz').style.display='none';
+  const r=document.getElementById('results');
+  r.style.display='block';
+  r.innerHTML =
+    '<div class="scorecard"><div class="bignum">'+correctN+'<span>/10</span></div>'+
+    '<div class="band">'+band+'</div><div class="pct">'+pct+'% de aciertos</div></div>'+
+    '<div class="bytopic"><div class="bythead">Por tema</div>'+byHtml+'</div>'+
+    reviewHtml+
+    '<div class="resultbtns"><button id="retry">Nuevo examen</button><button id="topractice">Volver a práctica</button></div>';
+  document.getElementById('retry').onclick=startExam;
+  document.getElementById('topractice').onclick=exitExam;
+  r.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+/* ===== events ===== */
+document.getElementById('modes').addEventListener('click',e=>{
+  const m=e.target.closest('.mode'); if(!m) return;
+  if(exam) exitExam();
+  document.querySelectorAll('.mode').forEach(x=>x.classList.remove('active'));
+  m.classList.add('active'); mode=m.dataset.mode;
+  newQuestion();
+});
+document.getElementById('examStart').onclick=()=>{ if(exam) exitExam(); else startExam(); };
+document.getElementById('next').onclick=()=>{
+  if(exam){ if(exam.idx<9){ exam.idx++; renderExamQ(); } else showResults(); }
+  else newQuestion();
+};
+
+/* codon reference */
+(function buildRef(){
+  let cells='';
+  Object.keys(CODON).forEach(c=>{ if(CODON[c]==='*') return; cells+='<div class="cell"><b>'+c+'</b> '+CODON[c]+'</div>'; });
+  document.getElementById('reftable').innerHTML = '<div class="grid">'+cells+'</div><div class="stoprow">STOP: UAA · UAG · UGA</div>';
+})();
+document.getElementById('reftbtn').onclick=()=>{
+  const t=document.getElementById('reftable'); t.classList.toggle('show');
+  document.getElementById('reftbtn').textContent = t.classList.contains('show')?'Ocultar tabla de codones':'Mostrar tabla de codones';
+};
+
+newQuestion();
+</script>
+</body>
+</html>
