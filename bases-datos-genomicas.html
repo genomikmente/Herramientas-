@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Navegador de Bases de Datos Genómicas — GenomiKmente</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    :root{
+      --navy:#0D1B2A;--navy2:#1a2e45;--coral:#E8604A;--coral-dark:#993C1D;
+      --gray:#8a9bb0;--border:#d8dde3;
+      --text:#0D1B2A;--bg:#FAF8F5;--surface:#fff;--surface2:#f5f3ef;
+    }
+    @media(prefers-color-scheme:dark){
+      :root{--text:#e8ecf0;--bg:#0f1923;--surface:#1a2535;--border:#2a3a4a;--gray:#6a7b8a;--surface2:#151f2d;}
+    }
+    body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+    header{background:var(--navy);padding:16px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+    .hl{display:flex;align-items:center;gap:10px;}
+    .hd{width:9px;height:9px;border-radius:50%;background:var(--coral);}
+    .hb{font-size:12px;font-weight:600;color:#fff;letter-spacing:.12em;text-transform:uppercase;}
+    .hs{font-size:10px;color:var(--gray);font-weight:300;}
+    .hr{font-size:10px;color:var(--gray);text-align:right;line-height:1.5;}
+    .hero{background:var(--navy);padding:36px 24px 44px;text-align:center;border-bottom:3px solid var(--coral);}
+    .htag{display:inline-block;font-size:10px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:var(--coral);background:rgba(232,96,74,.12);padding:5px 14px;border-radius:20px;margin-bottom:14px;}
+    .hero h1{font-family:'Playfair Display',Georgia,serif;font-size:clamp(22px,4vw,34px);font-weight:700;color:#fff;line-height:1.2;margin-bottom:8px;}
+    .hero p{font-size:13px;color:var(--gray);font-weight:300;max-width:520px;margin:0 auto;line-height:1.6;}
+    .con{max-width:820px;margin:0 auto;padding:32px 20px 60px;}
+    .intro{font-size:13px;color:var(--gray);text-align:center;margin-bottom:24px;line-height:1.6;}
+    .q-label{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--coral);margin-bottom:14px;text-align:center;}
+    .q-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px;margin-bottom:28px;}
+    .q-btn{padding:16px 18px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:13px;font-weight:500;text-align:left;cursor:pointer;transition:all .15s;line-height:1.5;font-family:'DM Sans',sans-serif;display:flex;align-items:flex-start;gap:10px;}
+    .q-btn:hover{border-color:var(--navy);background:var(--surface2);transform:translateY(-2px);box-shadow:0 4px 12px rgba(13,27,42,.08);}
+    .q-btn.active{background:var(--navy);color:#fff;border-color:var(--navy);}
+    .q-num{font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:var(--coral);flex-shrink:0;line-height:1;}
+    .results{display:none;}
+    .results.show{display:block;animation:fade .3s ease;}
+    @keyframes fade{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+    .db-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:14px;}
+    .db-head{background:var(--navy);padding:18px 22px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+    .db-name{font-family:'Playfair Display',serif;font-size:20px;font-weight:700;color:#fff;}
+    .db-type{font-size:10px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--coral);margin-top:2px;}
+    .db-link{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:var(--coral);color:#fff;font-size:12px;font-weight:500;border-radius:7px;text-decoration:none;transition:opacity .15s;white-space:nowrap;}
+    .db-link:hover{opacity:.85;}
+    .db-body{padding:20px 22px;}
+    .sl{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--gray);margin-bottom:8px;margin-top:16px;}
+    .sl:first-child{margin-top:0;}
+    .db-text{font-size:13px;color:var(--text);line-height:1.7;}
+    .chips{display:flex;flex-wrap:wrap;gap:6px;}
+    .chip{font-size:11px;font-weight:500;padding:4px 11px;border-radius:20px;}
+    .chip-yes{background:#E1F5EE;color:#085041;}
+    .chip-no{background:#FCEBEB;color:#791F1F;}
+    .chip-acmg{background:rgba(13,27,42,.08);color:var(--navy);}
+    .interp-box{background:var(--surface2);border-radius:8px;padding:13px 16px;font-size:12px;color:var(--text);line-height:1.7;}
+    .interp-box strong{color:var(--coral-dark);}
+    .reset{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--gray);background:none;border:1px solid var(--border);border-radius:8px;cursor:pointer;padding:9px 18px;font-family:'DM Sans',sans-serif;margin-top:8px;}
+    .reset:hover{background:var(--surface2);}
+    footer{background:var(--navy);padding:22px 24px;text-align:center;border-top:3px solid var(--coral);}
+    .fb{font-size:11px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:#fff;margin-bottom:4px;}
+    .fs{font-size:10px;color:var(--gray);}
+    .fn{font-size:11px;color:var(--gray);margin-top:10px;max-width:540px;margin-left:auto;margin-right:auto;line-height:1.6;}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="hl"><div class="hd"></div><div><div class="hb">GenomiKmente</div><div class="hs">by Lidia Segura · @genomikmente</div></div></div>
+    <div class="hr">Bases de datos genómicas<br>Guía de uso clínico</div>
+  </header>
+
+  <div class="hero">
+    <div class="htag">Herramienta gratuita</div>
+    <h1>Navegador de Bases de Datos Genómicas</h1>
+    <p>¿Qué base de datos usar según tu pregunta clínica? Selecciona tu objetivo y obtén la base correcta, cómo interpretarla y qué criterio ACMG activa.</p>
+  </div>
+
+  <div class="con">
+    <p class="intro">Esta herramienta te orienta sobre qué recurso consultar en la interpretación de variantes. Cada base incluye su uso, sus límites, cómo leer el resultado y el criterio ACMG/AMP relacionado.</p>
+
+    <div class="q-label">¿Cuál es tu pregunta?</div>
+    <div class="q-grid" id="q-grid"></div>
+
+    <div class="results" id="results"></div>
+  </div>
+
+  <footer>
+    <div class="fb">GENOMIKMENTE · by Lidia Segura</div>
+    
+    <div class="fn">Herramienta de apoyo educativo. Las bases de datos y sus umbrales se actualizan periódicamente; verifica siempre la versión vigente. No reemplaza el criterio del especialista en genómica clínica.</div>
+  </footer>
+
+  <script>
+    const questions = [
+      {
+        q: "¿Qué tan frecuente es esta variante en la población?",
+        dbs: [
+          {
+            name:"gnomAD v4",
+            type:"Frecuencia poblacional",
+            url:"https://gnomad.broadinstitute.org/",
+            sirve:"Frecuencia alélica (AF) de variantes en >730.000 exomas y 76.000 genomas de poblaciones diversas. Datos GRCh38. Incluye subpoblaciones (AFR, AMR, EAS, NFE, SAS, etc.).",
+            nosirve:["No indica patogenicidad por sí sola","No cubre todas las poblaciones por igual — Latinoamérica está subrepresentada"],
+            interp:"Busca el campo <strong>Allele Frequency (AF) global y por población</strong>. Una AF muy baja o ausente apoya patogenicidad (PM2_Supporting). Una AF alta (≥5%) es criterio benigno autónomo (BA1). Una AF mayor a la esperada para la prevalencia de la enfermedad apoya BS1.",
+            acmg:["PM2_Supporting","BA1","BS1"]
+          }
+        ]
+      },
+      {
+        q: "¿Esta variante fue reportada como patogénica?",
+        dbs: [
+          {
+            name:"ClinVar",
+            type:"Patogenicidad reportada",
+            url:"https://www.ncbi.nlm.nih.gov/clinvar/",
+            sirve:"Repositorio público de interpretaciones de variantes con relación a enfermedad, enviadas por laboratorios clínicos y grupos de investigación. Incluye el estado de revisión (estrellas de 0 a 4).",
+            nosirve:["No todas las clasificaciones tienen el mismo respaldo — revisa las estrellas","Puede haber clasificaciones conflictivas entre laboratorios"],
+            interp:"Mira el <strong>review status (estrellas)</strong>: 0 estrellas (sin criterios) es poco confiable, ≥2 estrellas (múltiples submitters concordantes) es sólido, 3-4 estrellas (panel experto / práctica guideline) es máxima confianza. Una clasificación robusta apoya PP5/BP6, aunque ClinGen recomienda no usar estos criterios y revisar la evidencia directa.",
+            acmg:["PP5","BP6","(verificar evidencia directa)"]
+          }
+        ]
+      },
+      {
+        q: "¿Qué enfermedades causa este gen?",
+        dbs: [
+          {
+            name:"OMIM",
+            type:"Relación gen-enfermedad",
+            url:"https://www.omim.org/",
+            sirve:"Catálogo de genes humanos y fenotipos asociados. Describe la relación gen-enfermedad, el modo de herencia y el espectro fenotípico.",
+            nosirve:["No es una base de variantes individuales","La curación puede tener retraso respecto a literatura reciente"],
+            interp:"Verifica que el gen tenga una <strong>relación gen-enfermedad establecida</strong> y que el modo de herencia coincida con el caso. Útil para confirmar que estás en el gen correcto antes de interpretar la variante.",
+            acmg:["Contexto para PP4","Validez gen-enfermedad (ClinGen)"]
+          },
+          {
+            name:"ClinGen",
+            type:"Validez gen-enfermedad",
+            url:"https://clinicalgenome.org/",
+            sirve:"Evalúa la validez clínica de la relación gen-enfermedad con un marco estandarizado (Definitive, Strong, Moderate, Limited). Incluye curación de dosis-sensibilidad y actionability.",
+            nosirve:["No es base de variantes individuales","No todos los genes están curados aún"],
+            interp:"Confirma el <strong>nivel de validez gen-enfermedad</strong>. Si la relación es 'Limited' o 'Disputed', interpreta las variantes con cautela. Esencial antes de clasificar como patogénica.",
+            acmg:["Marco de validez previo a clasificación"]
+          }
+        ]
+      },
+      {
+        q: "¿Qué fenotipo tiene mi paciente en términos estandarizados?",
+        dbs: [
+          {
+            name:"HPO — Human Phenotype Ontology",
+            type:"Fenotipo estandarizado",
+            url:"https://hpo.jax.org/",
+            sirve:"Vocabulario estandarizado de anomalías fenotípicas. Permite codificar el fenotipo del paciente en términos HPO y cruzarlo con genes y enfermedades.",
+            nosirve:["No es diagnóstico por sí solo","Requiere fenotipado clínico cuidadoso"],
+            interp:"Codifica los <strong>hallazgos clínicos en términos HPO</strong> y úsalos para priorizar genes candidatos o verificar que el fenotipo es específico de la enfermedad (apoya PP4). Herramientas como Phenomizer o Exomiser usan HPO para priorización.",
+            acmg:["PP4 (fenotipo específico)"]
+          }
+        ]
+      },
+      {
+        q: "¿Cuál es el impacto funcional predicho de esta variante missense?",
+        dbs: [
+          {
+            name:"REVEL",
+            type:"Predicción in silico (missense)",
+            url:"https://sites.google.com/site/revelgenomics/",
+            sirve:"Metapredictor que combina múltiples algoritmos para estimar patogenicidad de variantes missense. Score de 0 a 1.",
+            nosirve:["Solo para variantes missense","No reemplaza evidencia funcional real"],
+            interp:"Score <strong>≥0.7 apoya patogenicidad</strong> (PP3), <strong>≤0.15 apoya benignidad</strong> (BP4). Valores intermedios no son concluyentes. ClinGen recomienda usar metapredictores calibrados como REVEL sobre predictores individuales.",
+            acmg:["PP3","BP4"]
+          },
+          {
+            name:"CADD",
+            type:"Predicción in silico (general)",
+            url:"https://cadd.gs.washington.edu/",
+            sirve:"Puntúa la deleteriedad de variantes (SNVs e indels) en todo el genoma. Score escalado PHRED.",
+            nosirve:["No es específico de un mecanismo","Menos calibrado que REVEL para missense clínicas"],
+            interp:"Un <strong>CADD PHRED ≥20</strong> indica que la variante está entre el 1% más deletéreo del genoma. Útil como apoyo, pero ClinGen prefiere predictores calibrados. Combina con otras líneas de evidencia.",
+            acmg:["PP3 (con cautela)","BP4"]
+          }
+        ]
+      },
+      {
+        q: "¿Esta variante afecta el splicing (corte y empalme)?",
+        dbs: [
+          {
+            name:"SpliceAI",
+            type:"Predicción de splicing",
+            url:"https://spliceailookup.broadinstitute.org/",
+            sirve:"Red neuronal que predice el efecto de variantes sobre los sitios de splicing (donor/acceptor). Score de 0 a 1 (delta score).",
+            nosirve:["Predicción, no confirmación — requiere RNA si es crítico","No cubre todos los mecanismos de splicing"],
+            interp:"Un <strong>delta score ≥0.5 sugiere impacto en splicing</strong> (≥0.8 alta confianza, apoya PP3 o incluso PS1/PVS1 según el contexto). Si es crítico para la clasificación, confirma con estudio de RNA (RT-PCR, minigene).",
+            acmg:["PP3","PVS1 (si abole splicing canónico)"]
+          }
+        ]
+      },
+      {
+        q: "¿Hay variantes estructurales, CNVs o microdeleciones reportadas?",
+        dbs: [
+          {
+            name:"DECIPHER",
+            type:"Variantes estructurales / CNV",
+            url:"https://www.deciphergenomics.org/",
+            sirve:"Base de datos de CNVs y variantes en pacientes con anomalías del desarrollo. Útil para correlacionar CNVs con fenotipos.",
+            nosirve:["Enfocado en anomalías del desarrollo","No cubre todos los tipos de variante"],
+            interp:"Busca <strong>solapamiento de la CNV del paciente con casos reportados</strong> y síndromes por microdeleción/microduplicación conocidos. Útil para evaluar significancia clínica de CNVs.",
+            acmg:["Marco ACMG/ClinGen para CNVs (2019)"]
+          },
+          {
+            name:"ClinGen Dosage Sensitivity",
+            type:"Sensibilidad a dosis",
+            url:"https://www.clinicalgenome.org/working-groups/dosage-sensitivity-curation/",
+            sirve:"Curación de haploinsuficiencia y triplosensibilidad por región/gen. Esencial para interpretar CNVs.",
+            nosirve:["No todos los genes están curados","No es base de pacientes individuales"],
+            interp:"Verifica el <strong>score de haploinsuficiencia (HI) y triplosensibilidad (TS)</strong> del gen o región afectada por la CNV. Un gen con HI=3 (suficiente evidencia) en una deleción apoya patogenicidad.",
+            acmg:["Criterios ACMG/ClinGen para CNVs"]
+          }
+        ]
+      },
+      {
+        q: "¿Qué dice la literatura científica sobre este gen o variante?",
+        dbs: [
+          {
+            name:"PubMed",
+            type:"Literatura científica",
+            url:"https://pubmed.ncbi.nlm.nih.gov/",
+            sirve:"Base de literatura biomédica. Para buscar reportes de casos, estudios funcionales y descripciones de la variante o gen.",
+            nosirve:["Requiere estrategia de búsqueda cuidadosa","La calidad de la evidencia varía mucho"],
+            interp:"Busca con <strong>nombre del gen + nomenclatura de la variante (HGVS) + términos como 'pathogenic', 'functional', 'de novo'</strong>. Los estudios funcionales pueden apoyar PS3/BS3; reportes de novo apoyan PS2/PM6; cosegregación apoya PP1.",
+            acmg:["PS3","BS3","PS2","PM6","PP1"]
+          },
+          {
+            name:"LOVD",
+            type:"Base de variantes por gen",
+            url:"https://www.lovd.nl/",
+            sirve:"Bases de datos de variantes organizadas por gen, mantenidas por curadores. Complementa ClinVar con datos de cohortes específicas.",
+            nosirve:["Calidad variable según el curador del gen","Cobertura desigual entre genes"],
+            interp:"Busca la variante en la <strong>base específica del gen</strong>. Útil para encontrar reportes que no están en ClinVar y verificar frecuencia en cohortes de pacientes.",
+            acmg:["Evidencia complementaria"]
+          }
+        ]
+      }
+    ];
+
+    const grid = document.getElementById('q-grid');
+    const resultsEl = document.getElementById('results');
+
+    questions.forEach((item, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'q-btn';
+      btn.innerHTML = `<span class="q-num">${i+1}</span><span>${item.q}</span>`;
+      btn.onclick = () => selectQuestion(i, btn);
+      grid.appendChild(btn);
+    });
+
+    function selectQuestion(idx, btnEl) {
+      document.querySelectorAll('.q-btn').forEach(b => b.classList.remove('active'));
+      btnEl.classList.add('active');
+      const item = questions[idx];
+
+      let html = '';
+      item.dbs.forEach(db => {
+        html += `
+          <div class="db-card">
+            <div class="db-head">
+              <div>
+                <div class="db-name">${db.name}</div>
+                <div class="db-type">${db.type}</div>
+              </div>
+              <a class="db-link" href="${db.url}" target="_blank" rel="noopener noreferrer">Abrir base de datos →</a>
+            </div>
+            <div class="db-body">
+              <div class="sl">Para qué sirve</div>
+              <div class="db-text">${db.sirve}</div>
+              <div class="sl">Para qué NO sirve</div>
+              <div class="chips">${db.nosirve.map(n=>`<span class="chip chip-no">${n}</span>`).join('')}</div>
+              <div class="sl">Cómo interpretar el resultado</div>
+              <div class="interp-box">${db.interp}</div>
+              <div class="sl">Criterio ACMG/AMP relacionado</div>
+              <div class="chips">${db.acmg.map(a=>`<span class="chip chip-acmg">${a}</span>`).join('')}</div>
+            </div>
+          </div>`;
+      });
+
+      html += `<button class="reset" onclick="resetView()">↺ Elegir otra pregunta</button>`;
+
+      resultsEl.innerHTML = html;
+      resultsEl.classList.add('show');
+      resultsEl.scrollIntoView({behavior:'smooth', block:'start'});
+    }
+
+    function resetView() {
+      document.querySelectorAll('.q-btn').forEach(b => b.classList.remove('active'));
+      resultsEl.classList.remove('show');
+      resultsEl.innerHTML = '';
+      window.scrollTo({top:0, behavior:'smooth'});
+    }
+  </script>
+
+  <!-- FEEDBACK BUTTON -->
+  <div style="background:#0D1B2A;padding:28px 24px;text-align:center;border-top:1px solid rgba(255,255,255,0.08);">
+    <p style="font-size:12px;color:#8a9bb0;margin-bottom:14px;line-height:1.6;">¿Te fue útil esta herramienta? Tu feedback me ayuda a mejorarla para toda la comunidad.</p>
+    <a href="https://docs.google.com/forms/d/e/1FAIpQLScrTCxbqe3XFcFpR0BHjPSN5ArlIA3uh49L1J-0ssrsm3hzUQ/viewform?usp=publish-editor"
+       target="_blank" rel="noopener noreferrer"
+       style="display:inline-block;padding:10px 28px;background:#E8604A;color:#fff;font-family:DM Sans,sans-serif;font-size:13px;font-weight:500;border-radius:8px;text-decoration:none;letter-spacing:0.02em;"
+       onmouseover="this.style.opacity=0.85" onmouseout="this.style.opacity=1">
+      Dejar feedback →
+    </a>
+    <p style="font-size:10px;color:#4a5a6a;margin-top:12px;letter-spacing:0.08em;text-transform:uppercase;">GENOMIKMENTE · by Lidia Segura</p>
+  </div>
+</body>
+</html>
