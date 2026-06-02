@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Clasificadores Automatizados de Variantes — GenomiKmente</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    :root{
+      --navy:#0D1B2A;--navy2:#1a2e45;--coral:#E8604A;--coral-dark:#993C1D;
+      --gray:#8a9bb0;--border:#d8dde3;
+      --text:#0D1B2A;--bg:#FAF8F5;--surface:#fff;--surface2:#f5f3ef;
+      /* Premium accent — azul claro */
+      --accent:#3B82C4;--accent-light:#5B9BD5;--accent-soft:#E8F1FA;--accent-dark:#1F5A8F;
+    }
+    @media(prefers-color-scheme:dark){
+      :root{--text:#e8ecf0;--bg:#0f1923;--surface:#1a2535;--border:#2a3a4a;--gray:#6a7b8a;--surface2:#151f2d;--accent-soft:#15293d;}
+    }
+    body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+    header{background:var(--navy);padding:16px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+    .hl{display:flex;align-items:center;gap:10px;}
+    .hd{width:9px;height:9px;border-radius:50%;background:var(--accent-light);}
+    .hb{font-size:12px;font-weight:600;color:#fff;letter-spacing:.12em;text-transform:uppercase;}
+    .hs{font-size:10px;color:var(--gray);font-weight:300;}
+    .hr{font-size:10px;color:var(--gray);text-align:right;line-height:1.5;}
+    .hero{background:linear-gradient(135deg,#0D1B2A 0%,#1F3A52 100%);padding:36px 24px 44px;text-align:center;border-bottom:3px solid var(--accent-light);}
+    .htag{display:inline-block;font-size:10px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:var(--accent-light);background:rgba(91,155,213,.15);padding:5px 14px;border-radius:20px;margin-bottom:14px;}
+    .hero h1{font-family:'Playfair Display',Georgia,serif;font-size:clamp(22px,4vw,34px);font-weight:700;color:#fff;line-height:1.2;margin-bottom:8px;}
+    .hero p{font-size:13px;color:#a8b8c8;font-weight:300;max-width:540px;margin:0 auto;line-height:1.6;}
+    .con{max-width:840px;margin:0 auto;padding:32px 20px 60px;}
+    .intro{font-size:13px;color:var(--gray);text-align:center;margin-bottom:8px;line-height:1.6;}
+    .source-note{font-size:11px;color:var(--accent);text-align:center;margin-bottom:28px;font-style:italic;}
+
+    /* Category tabs */
+    .cat-tabs{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:28px;}
+    .cat-tab{padding:9px 18px;border-radius:24px;border:1.5px solid var(--border);background:var(--surface);color:var(--text);font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;}
+    .cat-tab:hover{border-color:var(--accent);}
+    .cat-tab.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+
+    .cat-section{display:none;}
+    .cat-section.show{display:block;animation:fade .3s ease;}
+    @keyframes fade{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+
+    .cat-title{font-family:'Playfair Display',serif;font-size:20px;font-weight:700;color:var(--text);margin-bottom:4px;display:flex;align-items:center;gap:10px;}
+    .cat-title::before{content:'';width:4px;height:22px;background:var(--accent);border-radius:2px;}
+    .cat-desc{font-size:12px;color:var(--gray);margin-bottom:20px;line-height:1.6;padding-left:14px;}
+
+    .tool-grid{display:grid;gap:12px;}
+    .tool-card{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:10px;padding:18px 20px;transition:all .15s;}
+    .tool-card:hover{box-shadow:0 4px 14px rgba(59,130,196,.1);transform:translateY(-1px);}
+    .tool-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:10px;}
+    .tool-name{font-size:16px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+    .flag{font-size:11px;font-weight:500;padding:2px 8px;border-radius:12px;background:var(--accent-soft);color:var(--accent-dark);}
+    .tool-link{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;background:var(--accent);color:#fff;font-size:11px;font-weight:500;border-radius:6px;text-decoration:none;transition:opacity .15s;white-space:nowrap;}
+    .tool-link:hover{opacity:.85;}
+    .tool-desc{font-size:12.5px;color:var(--text);line-height:1.7;margin-bottom:10px;}
+    .tool-meta{display:flex;flex-wrap:wrap;gap:6px;}
+    .meta-chip{font-size:10.5px;font-weight:500;padding:3px 10px;border-radius:14px;background:var(--surface2);color:var(--gray);}
+    .meta-chip.free{background:#E1F5EE;color:#085041;}
+    .meta-chip.paid{background:#FCEBEB;color:#791F1F;}
+    .meta-chip.freemium{background:var(--accent-soft);color:var(--accent-dark);}
+
+    .note-box{background:var(--accent-soft);border:1px solid rgba(59,130,196,.2);border-radius:10px;padding:14px 18px;margin-top:24px;font-size:12px;color:var(--text);line-height:1.7;}
+    .note-box strong{color:var(--accent-dark);}
+
+    footer{background:var(--navy);padding:22px 24px;text-align:center;border-top:3px solid var(--accent-light);}
+    .fb{font-size:11px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:#fff;margin-bottom:4px;}
+    .fs{font-size:10px;color:var(--gray);}
+    .fn{font-size:11px;color:var(--gray);margin-top:10px;max-width:560px;margin-left:auto;margin-right:auto;line-height:1.6;}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="hl"><div class="hd"></div><div><div class="hb">GenomiKmente</div><div class="hs">by Lidia Segura · @genomikmente</div></div></div>
+    <div class="hr">Clasificación automatizada<br>ACMG / ClinGen</div>
+  </header>
+
+  <div class="hero">
+    <div class="htag">★ Recurso especializado</div>
+    <h1>Clasificadores Automatizados de Variantes</h1>
+    <p>Guía de herramientas para la automatización de las guías ACMG/AMP y ClinGen. Organizadas por categoría clínica, con su origen, acceso y aplicación.</p>
+  </div>
+
+  <div class="con">
+    <p class="intro">Estas herramientas asisten la clasificación de variantes según criterios ACMG/AMP y guidelines gen-específicos de ClinGen. Ninguna reemplaza la revisión experta — verifica siempre la evidencia detrás de cada criterio.</p>
+    <p class="source-note">Basado en el panorama presentado en el V Congreso Interdisciplinar en Genética Humana · XXX Congreso AEGH · Granada 2026</p>
+
+    <div class="cat-tabs" id="cat-tabs"></div>
+    <div id="sections"></div>
+
+    <div class="note-box">
+      <strong>Nota clínica importante:</strong> Las herramientas generales (VarSome, InterVar) aplican criterios ACMG/AMP genéricos. Para genes con guidelines gen-específicos de ClinGen (BRCA1/2, MMR, TP53, PTEN, cardiopatías, hipoacusia), las herramientas especializadas tienen mayor precisión. Para variantes BRCA1/2, BRCA Exchange (ENIGMA) sigue siendo la referencia obligada.
+    </div>
+  </div>
+
+  <footer>
+    <div class="fb">GENOMIKMENTE · by Lidia Segura</div>
+    <div class="fs">Plataforma de divulgación en genética clínica y medicina genómica</div>
+    <div class="fn">Herramienta de apoyo educativo. El panorama de software se actualiza constantemente; verifica versiones, accesos y guidelines vigentes. No reemplaza el criterio del especialista en genómica clínica.</div>
+  </footer>
+
+  <script>
+    const categories = [
+      {
+        id: "generales",
+        name: "Generales",
+        desc: "Clasificadores que aplican los criterios ACMG/AMP 2015 a variantes de cualquier gen. Punto de partida para la interpretación, siempre con verificación manual.",
+        tools: [
+          { name:"VarSome", flag:"Internacional", url:"https://varsome.com/", access:"freemium", desc:"Agrega información de múltiples bases de datos (gnomAD, ClinVar, OMIM, SpliceAI, CADD) y genera clasificación ACMG automática. Uno de los más usados en laboratorios diagnósticos.", meta:["ACMG/AMP 2015","Web","Freemium"] },
+          { name:"InterVar", flag:"Internacional", url:"http://wintervar.wglab.org/", access:"free", desc:"Implementación automatizada de los criterios ACMG/AMP 2015. Disponible como web y software descargable. Muy usado en investigación académica.", meta:["ACMG/AMP 2015","Web + CLI","Gratuito"] },
+          { name:"Franklin by Genoox", flag:"Internacional", url:"https://franklin.genoox.com/", access:"freemium", desc:"Clasificador ACMG con inteligencia artificial. Integra múltiples fuentes de evidencia y genera reportes estructurados. Muy usado en laboratorios clínicos.", meta:["ACMG/AMP + IA","Web","Freemium"] },
+          { name:"REEV", flag:"Internacional", url:"https://reev.cubi.bihealth.org/", access:"free", desc:"Herramienta del equipo Broad/BIH para interpretación semi-automatizada con interfaz visual moderna. Permite editar cada criterio y ver su justificación. Ideal para aprendizaje.", meta:["ACMG/AMP","Web","Gratuito"] },
+          { name:"PathoMAN", flag:"Internacional", url:"https://pathoman.mskcc.org/", access:"free", desc:"Herramienta del MSKCC para clasificación automatizada con criterios ACMG. Genera modelos robustos usando una base de datos genética diversa.", meta:["ACMG/AMP","Web","Gratuito"] },
+          { name:"Genebe", flag:"Internacional", url:"https://genebe.net/", access:"freemium", desc:"Plataforma web para clasificación ACMG con interfaz visual. Relativamente reciente, con API disponible para análisis programático.", meta:["ACMG/AMP","Web + API","Freemium"] }
+        ]
+      },
+      {
+        id: "cancer",
+        name: "Cáncer hereditario",
+        desc: "Clasificadores con criterios ClinGen gen-específicos para síndromes de cáncer hereditario. Estos criterios difieren de los ACMG/AMP genéricos.",
+        tools: [
+          { name:"vaRHC", flag:"España", url:"https://github.com/emunte/vaRHC", access:"free", desc:"Paquete de R desarrollado en España. Aplica criterios ACMG/AMP gen-específicos de ClinGen para ATM, CDH1, CHEK2, MLH1, MSH2, MSH6, PMS2, PTEN y TP53, y criterios generales para otros genes. Considera recomendaciones CanVIG-UK. Presentado en el Congreso AEGH Granada 2026.", meta:["ClinGen gen-específico","R package","Gratuito"] },
+          { name:"Cancer SIGVAR", flag:"China", url:"https://www.biorxiv.org/content/10.1101/2020.04.15.042283v1", access:"free", desc:"Herramienta semi-automatizada de BGI (China) para variantes germinales de cáncer hereditario. Expande los criterios de 28 a 48 y acepta archivos VCF. Validada con ClinVar y CLINVITAE.", meta:["ACMG/AMP 48 criterios","VCF","Gratuito"] },
+          { name:"HerediVar", flag:"Alemania", url:"https://heredivar.uni-koeln.de/", access:"free", desc:"Aplicación web alemana (financiada por German Cancer Aid) para cáncer de mama y ovario hereditario (HBOC). A diferencia de vaRHC y Cancer SIGVAR, sí implementa criterios gen-específicos para BRCA1/2. Permite clasificaciones de consenso.", meta:["ClinGen HBOC + BRCA1/2","Web","Gratuito"] },
+          { name:"BRCA Exchange", flag:"Internacional", url:"https://brcaexchange.org/", access:"free", desc:"Base de datos global de variantes BRCA1/2 con clasificaciones curadas por el consorcio ENIGMA. Referencia obligada para cualquier variante BRCA — máximo nivel de evidencia.", meta:["ENIGMA / ClinGen","Web","Gratuito"] }
+        ]
+      },
+      {
+        id: "cardio",
+        name: "Cardiopatías",
+        desc: "Clasificadores con criterios ACMG adaptados para genes de cardiopatías hereditarias: miocardiopatías, canalopatías y aortopatías.",
+        tools: [
+          { name:"CardioClassifier", flag:"Reino Unido", url:"https://www.cardioclassifier.org/", access:"free", desc:"Clasificación semi-automatizada para variantes en genes de cardiopatías hereditarias (MCH, MCD, MAVD, canalopatías). Aplica criterios ACMG con ajustes específicos para cardiogenética — frecuencia y localización en dominios tienen umbrales propios.", meta:["ACMG cardio-específico","Web","Gratuito"] },
+          { name:"CardioVAI", flag:"Internacional", url:"https://cardiovai.engenome.com/", access:"freemium", desc:"Herramienta de interpretación automatizada para variantes cardíacas. Implementa adaptaciones de los criterios ACMG/AMP para el contexto de cardiopatías hereditarias.", meta:["ACMG cardio-específico","Web","Freemium"] },
+          { name:"HTAADVar", flag:"Internacional", url:"https://www.htaadvar.org/", access:"free", desc:"Específica para aortopatías torácicas hereditarias y displasias del tejido conectivo (síndrome de Marfan, Loeys-Dietz, etc.). Aplica criterios gen-específicos para genes de aortopatía.", meta:["ClinGen aortopatías","Web","Gratuito"] }
+        ]
+      },
+      {
+        id: "hipoacusia",
+        name: "Hipoacusia hereditaria",
+        desc: "Clasificadores con criterios ClinGen específicos para genes de pérdida auditiva hereditaria. Los umbrales difieren significativamente de los ACMG generales.",
+        tools: [
+          { name:"VIP-HL", flag:"Internacional", url:"https://www.genomicmedstrat.com/", access:"free", desc:"Variant Interpretation Portal for Hearing Loss. Aplica los criterios ClinGen específicos del panel de expertos en hipoacusia (Hearing Loss Expert Panel) para genes como GJB2, SLC26A4, MYO7A.", meta:["ClinGen hipoacusia","Web","Gratuito"] },
+          { name:"GenOtoScope", flag:"Internacional", url:"https://github.com/medgen-uni-bonn/GenOtoScope", access:"free", desc:"Herramienta automatizada para clasificación de variantes en genes de sordera, aplicando las especificaciones ClinGen del panel de hipoacusia. Disponible como software.", meta:["ClinGen hipoacusia","Software","Gratuito"] }
+        ]
+      }
+    ];
+
+    const tabsEl = document.getElementById('cat-tabs');
+    const sectionsEl = document.getElementById('sections');
+
+    categories.forEach((cat, i) => {
+      const tab = document.createElement('button');
+      tab.className = 'cat-tab' + (i === 0 ? ' active' : '');
+      tab.textContent = cat.name;
+      tab.onclick = () => showCategory(cat.id, tab);
+      tabsEl.appendChild(tab);
+
+      const section = document.createElement('div');
+      section.className = 'cat-section' + (i === 0 ? ' show' : '');
+      section.id = 'sec-' + cat.id;
+
+      let toolsHtml = cat.tools.map(t => {
+        const accessClass = t.access === 'free' ? 'free' : (t.access === 'paid' ? 'paid' : 'freemium');
+        const accessLabel = t.access === 'free' ? 'Gratuito' : (t.access === 'paid' ? 'De pago' : 'Freemium');
+        return `
+          <div class="tool-card">
+            <div class="tool-head">
+              <div class="tool-name">${t.name} <span class="flag">${t.flag}</span></div>
+              <a class="tool-link" href="${t.url}" target="_blank" rel="noopener noreferrer">Abrir →</a>
+            </div>
+            <div class="tool-desc">${t.desc}</div>
+            <div class="tool-meta">${t.meta.map(m=>`<span class="meta-chip">${m}</span>`).join('')}</div>
+          </div>`;
+      }).join('');
+
+      section.innerHTML = `
+        <div class="cat-title">${cat.name}</div>
+        <div class="cat-desc">${cat.desc}</div>
+        <div class="tool-grid">${toolsHtml}</div>`;
+      sectionsEl.appendChild(section);
+    });
+
+    function showCategory(id, tabEl) {
+      document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
+      tabEl.classList.add('active');
+      document.querySelectorAll('.cat-section').forEach(s => s.classList.remove('show'));
+      document.getElementById('sec-' + id).classList.add('show');
+    }
+  </script>
+
+  <!-- FEEDBACK BUTTON -->
+  <div style="background:#0D1B2A;padding:28px 24px;text-align:center;border-top:1px solid rgba(255,255,255,0.08);">
+    <p style="font-size:12px;color:#8a9bb0;margin-bottom:14px;line-height:1.6;">¿Te fue útil esta herramienta? Tu feedback me ayuda a mejorarla para toda la comunidad.</p>
+    <a href="https://docs.google.com/forms/d/e/1FAIpQLScrTCxbqe3XFcFpR0BHjPSN5ArlIA3uh49L1J-0ssrsm3hzUQ/viewform?usp=publish-editor"
+       target="_blank" rel="noopener noreferrer"
+       style="display:inline-block;padding:10px 28px;background:#3B82C4;color:#fff;font-family:DM Sans,sans-serif;font-size:13px;font-weight:500;border-radius:8px;text-decoration:none;letter-spacing:0.02em;"
+       onmouseover="this.style.opacity=0.85" onmouseout="this.style.opacity=1">
+      Dejar feedback →
+    </a>
+    <p style="font-size:10px;color:#4a5a6a;margin-top:12px;letter-spacing:0.08em;text-transform:uppercase;">GENOMIKMENTE · by Lidia Segura</p>
+  </div>
+</body>
+</html>
