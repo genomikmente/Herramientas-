@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Algoritmo Diagnóstico · Síndromes de Impronta — GenomiKmente</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0D1B2A;
+    --navy-soft:#1B2A3A;
+    --coral:#E8604A;
+    --coral-soft:#F2C9C0;
+    --coral-tint:#FBEAE6;
+    --cream:#FAF8F5;
+    --cream-2:#F0EDE7;
+    --blue:#5B8DB8;
+    --blue-tint:#E4EDF4;
+    --ink:#0D1B2A;
+    --muted:#5C6470;
+    --line:#E2DBD1;
+    --serif:'Playfair Display',Georgia,serif;
+    --sans:'DM Sans',system-ui,-apple-system,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:var(--sans);
+    background:var(--cream);
+    color:var(--ink);
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:980px;margin:0 auto;padding:0 22px}
+
+  /* ---------- Header ---------- */
+  header{
+    background:var(--navy);
+    color:var(--cream);
+    padding:20px 0 34px;
+    border-bottom:4px solid var(--coral);
+  }
+  .topbar{
+    display:flex;justify-content:space-between;align-items:flex-start;
+    gap:16px;margin-bottom:30px;
+  }
+  .brand-mark{display:flex;align-items:flex-start;gap:9px}
+  .brand-mark .dot{width:9px;height:9px;border-radius:50%;background:var(--coral);margin-top:6px;flex-shrink:0}
+  .brand-mark .bname{font-weight:700;letter-spacing:.18em;font-size:.92rem;line-height:1.3}
+  .brand-mark .bsub{font-size:.74rem;color:#9AA3AE;letter-spacing:.02em}
+  .topbar .ctx{text-align:right;font-size:.74rem;line-height:1.4;color:#9AA3AE}
+  .topbar .ctx b{display:block;color:#C7CDD6;font-weight:600;letter-spacing:.02em}
+  .head-center{text-align:center;max-width:680px;margin:0 auto}
+  .eyebrow{
+    display:inline-block;
+    background:transparent;
+    color:var(--coral);
+    font-size:.7rem;
+    font-weight:700;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    padding:6px 16px;
+    border:1px solid rgba(232,96,74,.45);
+    border-radius:30px;
+    margin-bottom:20px;
+  }
+  header h1{
+    font-family:var(--serif);
+    font-weight:700;
+    font-size:clamp(2rem,5vw,3rem);
+    line-height:1.05;
+    letter-spacing:.01em;
+  }
+  header h1 .light{color:var(--coral)}
+  header p.sub{
+    margin:14px auto 0;
+    max-width:60ch;
+    color:#C7CDD6;
+    font-size:1rem;
+  }
+  .chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:24px}
+  .chip{
+    font-size:.78rem;font-weight:500;color:#C7CDD6;
+    background:rgba(255,255,255,.04);
+    border:1px solid rgba(255,255,255,.14);
+    border-radius:30px;padding:7px 15px;
+  }
+
+  /* ---------- Tabs ---------- */
+  .tabs-bar{
+    position:sticky;top:0;z-index:20;
+    background:rgba(250,248,245,.92);
+    backdrop-filter:saturate(140%) blur(6px);
+    border-bottom:1px solid var(--line);
+  }
+  .tabs{display:flex;gap:8px;flex-wrap:wrap;padding:12px 0;justify-content:center}
+  .tab-btn{
+    font-family:var(--sans);
+    font-size:.9rem;
+    font-weight:500;
+    color:var(--muted);
+    background:transparent;
+    border:1px solid var(--line);
+    border-radius:30px;
+    padding:9px 18px;
+    cursor:pointer;
+    transition:all .18s ease;
+  }
+  .tab-btn:hover{color:var(--navy);border-color:var(--coral-soft);background:var(--coral-tint)}
+  .tab-btn.active{color:#fff;background:var(--navy);border-color:var(--navy)}
+
+  section.panel{display:none;padding:34px 0 10px;animation:fade .3s ease}
+  section.panel.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+  h2.section-title{
+    font-family:var(--serif);
+    font-weight:700;
+    font-size:clamp(1.4rem,3.4vw,2rem);
+    line-height:1.1;
+    margin-bottom:6px;
+  }
+  .section-lead{color:var(--muted);max-width:64ch;margin-bottom:26px;font-size:1rem}
+
+  /* ---------- Decision tree ---------- */
+  .step-track{display:flex;gap:8px;margin-bottom:26px;flex-wrap:wrap}
+  .track-dot{
+    font-size:.74rem;font-weight:600;letter-spacing:.04em;
+    color:var(--muted);
+    padding:6px 12px;border-radius:20px;background:var(--cream-2);
+    border:1px solid var(--line);
+  }
+  .track-dot.done{background:var(--coral-tint);color:var(--coral);border-color:var(--coral-soft)}
+  .track-dot.current{background:var(--navy);color:#fff;border-color:var(--navy)}
+
+  .card{
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:26px;
+    box-shadow:0 1px 3px rgba(13,27,42,.04);
+  }
+  .q-tag{
+    font-size:.74rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--coral);margin-bottom:10px;display:block;
+  }
+  .q-title{font-family:var(--serif);font-weight:600;font-size:1.45rem;line-height:1.15;margin-bottom:14px}
+  .q-help{
+    background:var(--cream-2);
+    border-left:3px solid var(--coral);
+    border-radius:0 8px 8px 0;
+    padding:11px 16px;margin-bottom:20px;
+    color:var(--muted);font-size:.92rem;
+  }
+
+  .options{display:grid;gap:11px}
+  .opt{
+    text-align:left;width:100%;
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:11px;
+    padding:17px 20px;
+    cursor:pointer;
+    font-family:var(--sans);font-size:1rem;color:var(--ink);
+    transition:all .16s ease;
+    display:flex;align-items:center;justify-content:space-between;gap:14px;
+    box-shadow:0 1px 2px rgba(13,27,42,.03);
+  }
+  .opt:hover{border-color:var(--coral);box-shadow:0 4px 14px rgba(232,96,74,.1)}
+  .opt .otext strong{display:block;font-weight:600;margin-bottom:2px}
+  .opt .otext span.sm{font-size:.86rem;color:var(--muted);font-weight:400}
+  .opt .chev{flex-shrink:0;color:var(--line);font-size:1.5rem;line-height:1;transition:color .16s,transform .16s}
+  .opt:hover .chev{color:var(--coral);transform:translateX(3px)}
+  .opt .tag{
+    display:inline-block;vertical-align:1px;
+    font-size:.7rem;font-weight:700;letter-spacing:.06em;
+    padding:2px 9px;border-radius:20px;margin-right:8px;
+    background:var(--coral-tint);color:var(--coral);
+  }
+  .opt .tag.blue{background:var(--blue-tint);color:var(--blue)}
+  .opt .tag.navy{background:var(--cream-2);color:var(--navy)}
+
+  .result-box{
+    border-left:4px solid var(--coral);
+    background:var(--coral-tint);
+    border-radius:0 12px 12px 0;
+    padding:22px 24px;margin-bottom:18px;
+  }
+  .result-box.blue{border-left-color:var(--blue);background:var(--blue-tint)}
+  .result-box.navy{border-left-color:var(--navy);background:var(--cream-2)}
+  .result-box h3{font-family:var(--serif);font-weight:600;font-size:1.2rem;margin-bottom:8px}
+  .result-box ul{margin:10px 0 0 18px}
+  .result-box li{margin-bottom:6px;font-size:.96rem}
+  .result-box .pill{
+    display:inline-block;background:#fff;border:1px solid var(--line);
+    border-radius:6px;padding:3px 10px;font-size:.82rem;font-weight:600;
+    margin:4px 6px 0 0;color:var(--navy);
+  }
+  .rb-note{font-size:.86rem;color:var(--muted);font-style:italic;margin-top:12px;line-height:1.5}
+  .iso-table{width:100%;border-collapse:collapse;margin:12px 0 2px;font-size:.9rem;background:#fff;border-radius:8px;overflow:hidden}
+  .iso-table th{background:var(--navy);color:#fff;text-align:left;padding:9px 12px;font-weight:600;font-size:.82rem}
+  .iso-table td{padding:9px 12px;border-top:1px solid var(--line);vertical-align:top}
+  .iso-table td:first-child{font-weight:600;color:var(--navy);white-space:nowrap;width:34%}
+  .reset-btn{
+    margin-top:8px;
+    background:var(--navy);color:#fff;border:none;border-radius:9px;
+    padding:12px 22px;font-family:var(--sans);font-weight:500;font-size:.92rem;
+    cursor:pointer;transition:opacity .16s;
+  }
+  .reset-btn:hover{opacity:.88}
+  .back-link{
+    background:none;border:none;color:var(--muted);cursor:pointer;
+    font-family:var(--sans);font-size:.88rem;margin-bottom:16px;padding:4px 0;
+    display:inline-flex;align-items:center;gap:6px;
+  }
+  .back-link:hover{color:var(--coral)}
+
+  /* ---------- Flowchart ---------- */
+  .flow{display:flex;flex-direction:column;align-items:center;gap:0}
+  .flow-node{
+    width:100%;max-width:560px;
+    background:#fff;border:1.5px solid var(--line);border-radius:13px;
+    padding:18px 22px;cursor:pointer;transition:all .18s ease;position:relative;
+  }
+  .flow-node:hover{border-color:var(--coral);box-shadow:0 6px 18px rgba(232,96,74,.12)}
+  .flow-node .nlabel{font-size:.72rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--coral);margin-bottom:5px}
+  .flow-node h4{font-family:var(--serif);font-weight:600;font-size:1.12rem;color:var(--navy)}
+  .flow-node p{font-size:.9rem;color:var(--muted);margin-top:4px}
+  .flow-node .detail{display:none;margin-top:12px;padding-top:12px;border-top:1px dashed var(--line);font-size:.92rem;color:var(--ink)}
+  .flow-node.open .detail{display:block}
+  .flow-node.open{border-color:var(--coral)}
+  .flow-node .detail ul{margin:8px 0 0 18px}
+  .flow-node .detail li{margin-bottom:5px}
+  .flow-connector{width:2px;height:26px;background:var(--coral-soft)}
+  .flow-arrow{color:var(--coral);font-size:1.1rem;line-height:.6}
+  .branch-cont{
+    font-size:.82rem;color:var(--blue);background:var(--blue-tint);
+    border:1px solid #CFE0EC;border-radius:20px;padding:6px 16px;margin:4px 0;
+    font-weight:500;text-align:center;
+  }
+  .branch-cont b{color:var(--blue)}
+  .branch-row{display:flex;gap:14px;width:100%;justify-content:center;flex-wrap:wrap}
+  .branch-row .flow-node{max-width:300px;flex:1 1 260px}
+  .flow-node.a-node .nlabel{color:var(--coral)}
+  .flow-node.b-node .nlabel{color:var(--blue)}
+  .flow-node.b-node:hover{border-color:var(--blue);box-shadow:0 6px 18px rgba(91,141,184,.14)}
+  .flow-node.b-node.open{border-color:var(--blue)}
+  .flow-node.c-node .nlabel{color:var(--navy)}
+
+  /* ---------- Syndrome selector ---------- */
+  .syn-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin-bottom:26px}
+  .syn-card{
+    background:#fff;border:1.5px solid var(--line);border-radius:13px;padding:18px;
+    cursor:pointer;transition:all .18s ease;text-align:left;font-family:var(--sans);
+  }
+  .syn-card:hover{border-color:var(--coral);transform:translateY(-3px);box-shadow:0 8px 20px rgba(13,27,42,.08)}
+  .syn-card.active{border-color:var(--coral);background:var(--coral-tint)}
+  .syn-card .abbr{font-family:var(--serif);font-weight:700;font-size:1.5rem;color:var(--navy)}
+  .syn-card .full{font-size:.82rem;color:var(--muted);margin-top:2px}
+  .syn-card .locus{display:inline-block;margin-top:10px;font-size:.76rem;font-weight:600;background:var(--cream-2);border-radius:5px;padding:3px 9px;color:var(--navy)}
+
+  .syn-detail{display:none;background:#fff;border:1px solid var(--line);border-radius:14px;padding:28px;animation:fade .3s ease}
+  .syn-detail.show{display:block}
+  .syn-detail h3{font-family:var(--serif);font-weight:700;font-size:1.6rem;color:var(--navy)}
+  .syn-detail .meta{color:var(--muted);margin-bottom:20px;font-size:.95rem}
+  .syn-detail .meta b{color:var(--coral)}
+  .det-block{margin-bottom:20px}
+  .det-block h5{font-size:.74rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--coral);margin-bottom:10px}
+  .mech-row{display:flex;align-items:center;gap:12px;margin-bottom:9px}
+  .mech-row .mname{flex:0 0 auto;font-size:.92rem;min-width:190px;font-weight:500}
+  .mech-row .bar-track{flex:1;height:10px;background:#EDE6DC;border-radius:6px;overflow:hidden}
+  .mech-row .bar{height:100%;background:linear-gradient(90deg,#E8604A,#EF7A66);border-radius:6px;min-width:6px}
+  .mech-row .pct{flex:0 0 auto;font-size:.84rem;font-weight:600;color:var(--muted);min-width:64px;text-align:right}
+  .syn-note{font-size:.83rem;color:var(--muted);font-style:italic;margin-top:10px;line-height:1.45}
+  .route{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  .route .rstep{background:var(--cream-2);border:1px solid var(--line);border-radius:8px;padding:8px 13px;font-size:.88rem;font-weight:500}
+  .route .rstep.first{background:var(--navy);color:#fff;border-color:var(--navy)}
+  .route .rarrow{color:var(--coral);font-weight:700}
+
+  /* ---------- Disclaimer + reference + footer ---------- */
+  .note{
+    background:var(--cream-2);border:1px solid var(--line);border-radius:12px;
+    padding:18px 20px;margin:30px 0 0;font-size:.88rem;color:var(--muted);
+  }
+  .note b{color:var(--navy)}
+  .refs{margin-top:26px;font-size:.82rem;color:var(--muted)}
+  .refs h6{font-size:.74rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--navy);margin-bottom:8px}
+  .refs ul{list-style:none}
+  .refs li{margin-bottom:5px;padding-left:14px;position:relative}
+  .refs li:before{content:'';position:absolute;left:0;top:9px;width:5px;height:5px;border-radius:50%;background:var(--coral)}
+
+  .feedback{text-align:center;margin:30px 0 0}
+  .feedback a{
+    display:inline-flex;align-items:center;gap:9px;
+    background:var(--coral);color:#fff;text-decoration:none;
+    padding:13px 26px;border-radius:10px;font-weight:600;font-size:.94rem;
+    transition:transform .16s,opacity .16s;
+  }
+  .feedback a:hover{transform:translateY(-2px);opacity:.94}
+  .feedback p{font-size:.82rem;color:var(--muted);margin-top:10px}
+
+  footer{
+    margin-top:46px;background:var(--navy);color:var(--cream);
+    padding:26px 0;border-top:4px solid var(--coral);
+  }
+  footer .wrap{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+  footer .brand{font-weight:700;letter-spacing:.22em;font-size:.95rem}
+  footer .by{font-family:var(--serif);font-style:italic;color:var(--coral);font-size:1.05rem}
+
+  @media(max-width:560px){
+    .card{padding:20px}
+    .mech-row .mname{min-width:130px;font-size:.84rem}
+    .tab-btn{font-size:.84rem;padding:9px 12px}
+  }
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand-mark">
+        <span class="dot"></span>
+        <div>
+          <div class="bname">GENOMIKMENTE</div>
+          <div class="bsub">by Lidia Segura · @genomikmente</div>
+        </div>
+      </div>
+      <div class="ctx">
+        <b>Guía clínica educativa</b>
+        EMQN · ACGS · ACMG
+      </div>
+    </div>
+    <div class="head-center">
+      <span class="eyebrow">Herramienta gratuita</span>
+      <h1>Síndromes de impronta</h1>
+      <p class="sub">Árbol de decisión para razonar la ruta diagnóstica: del cribado con MS-MLPA a la confirmación del mecanismo molecular.</p>
+      <div class="chips">
+        <span class="chip">MS-MLPA</span>
+        <span class="chip">SNP array</span>
+        <span class="chip">STRs</span>
+        <span class="chip">FISH / qPCR</span>
+        <span class="chip">Bisulfito-PCR</span>
+        <span class="chip">NGS de metilación</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="tabs-bar">
+  <div class="wrap">
+    <div class="tabs" role="tablist">
+      <button class="tab-btn active" data-tab="tree" role="tab">Árbol de decisión</button>
+      <button class="tab-btn" data-tab="flow" role="tab">Algoritmo de flujo</button>
+      <button class="tab-btn" data-tab="syn" role="tab">Por síndrome</button>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- ============ TAB 1: DECISION TREE ============ -->
+  <section class="panel active" id="tree">
+    <h2 class="section-title">Árbol de decisión guiado</h2>
+    <p class="section-lead">Responde según el resultado de cada paso y la herramienta orienta el siguiente. El punto de partida siempre es la sospecha clínica que motiva el estudio.</p>
+
+    <div class="step-track" id="track"></div>
+    <div id="tree-stage"></div>
+
+    <div class="note">
+      <b>Uso educativo.</b> Esta herramienta ilustra el razonamiento diagnóstico en síndromes de impronta con fines formativos. No sustituye el juicio clínico, la valoración por genética médica ni las guías vigentes de cada laboratorio. La elección de la región a estudiar depende de la sospecha clínica específica.
+    </div>
+  </section>
+
+  <!-- ============ TAB 2: FLOWCHART ============ -->
+  <section class="panel" id="flow">
+    <h2 class="section-title">Algoritmo de flujo visual</h2>
+    <p class="section-lead">El recorrido completo, de la sospecha clínica al diagnóstico molecular. Toca cada nodo para ver el detalle.</p>
+
+    <div class="flow">
+      <div class="flow-node c-node" onclick="this.classList.toggle('open')">
+        <div class="nlabel">Punto de partida</div>
+        <h4>Sospecha clínica</h4>
+        <p>El fenotipo define qué región conviene estudiar primero</p>
+        <div class="detail">El cuadro clínico orienta la región diana del MS-MLPA:
+          <ul>
+            <li>Rasgos de <b>Prader-Willi</b> o <b>Angelman</b> → 15q11-q13</li>
+            <li><b>Sobrecrecimiento</b> (Beckwith-Wiedemann) → 11p15.5</li>
+            <li><b>Restricción del crecimiento</b> (Silver-Russell) → 11p15 (hipometilación IC1) y UPD materna del cromosoma 7 (≤10%)</li>
+            <li>Espectro <b>Temple</b> / <b>Kagami-Ogata</b> → 14q32 (DLK1/MEG3)</li>
+            <li><b>Diabetes neonatal transitoria</b> → 6q24 (PLAGL1/HYMAI)</li>
+            <li><b>Pseudohipoparatiroidismo 1B</b> (iPPSD3) → GNAS (20q13.32)</li>
+          </ul>
+        </div>
+      </div>
+      <div class="flow-connector"></div><div class="flow-arrow">▼</div>
+
+      <div class="flow-node" onclick="this.classList.toggle('open')">
+        <div class="nlabel">Primera línea · Cribado dirigido</div>
+        <h4>MS-MLPA (región específica según sospecha)</h4>
+        <p>Evalúa simultáneamente metilación + número de copias</p>
+        <div class="detail">Técnica de primera línea por su alta sensibilidad y porque distingue un defecto epigenético de uno estructural en un solo ensayo.</div>
+      </div>
+      <div class="flow-connector"></div><div class="flow-arrow">▼</div>
+
+      <div class="branch-row">
+        <div class="flow-node a-node" onclick="this.classList.toggle('open')">
+          <div class="nlabel">Rama A</div>
+          <h4>Metilación alterada + CNV</h4>
+          <p>Sospecha: deleción / duplicación</p>
+          <div class="detail">Alteración estructural. Confirmar y delimitar con:<ul><li>SNP array</li><li>FISH / qPCR dirigido</li></ul></div>
+        </div>
+        <div class="flow-node b-node" onclick="this.classList.toggle('open')">
+          <div class="nlabel">Rama B</div>
+          <h4>Metilación alterada SIN CNV</h4>
+          <p>Sospecha: UPD o defecto epigenético</p>
+          <div class="detail">Estudio de UPD: los <b>STRs en trío</b> son el estándar de confirmación (captan heterodisomía y origen parental). El <b>SNP-array</b> es complementario (LOH/isodisomía, CNV submicroscópica, mosaicismo, extensión). El orden depende del contexto clínico y del laboratorio.</div>
+        </div>
+        <div class="flow-node c-node" onclick="this.classList.toggle('open')">
+          <div class="nlabel">Rama C</div>
+          <h4>Resultado normal, alta sospecha</h4>
+          <p>Considerar mosaicismo o defectos sutiles</p>
+          <div class="detail">No descarta el diagnóstico. Escalar a estudios de metilación avanzados (bisulfito + secuenciación, NGS de metilación).</div>
+        </div>
+      </div>
+      <div class="flow-connector"></div>
+      <div class="branch-cont">↓ Continuación de la <b>rama B</b> (metilación alterada sin CNV)</div>
+      <div class="flow-arrow">▼</div>
+
+      <div class="flow-node b-node" onclick="this.classList.toggle('open')">
+        <div class="nlabel">Confirmación de UPD</div>
+        <h4>STRs en trío (± SNP-array)</h4>
+        <p>Confirmación de UPD: tipo de disomía y origen parental</p>
+        <div class="detail">Los <b>STRs en trío</b> son el estándar de confirmación de UPD: confirman el origen parental y captan la <b>heterodisomía</b>. El <b>SNP-array</b> es complementario —detecta LOH (sugiere isodisomía), mosaicismo y extensión—, pero no discrimina la heterodisomía por sí solo y un LOH no es diagnóstico de UPD sin confirmación. El orden entre ambos depende del contexto y del laboratorio. La isodisomía añade riesgo de homocigosis para variantes recesivas.</div>
+      </div>
+      <div class="flow-connector"></div><div class="flow-arrow">▼</div>
+
+      <div class="flow-node" onclick="this.classList.toggle('open')">
+        <div class="nlabel">Si no se confirma UPD</div>
+        <h4>Defectos de impronta (ICRs) y epimutaciones</h4>
+        <p>Estudios: bisulfito-PCR, secuenciación de metilación</p>
+        <div class="detail">Sin UPD ni CNV, considerar un defecto primario del centro de impronta o una epimutación. Siguiente pregunta clave: ¿afecta a un solo locus o a varios?</div>
+      </div>
+      <div class="flow-connector"></div><div class="flow-arrow">▼</div>
+
+      <div class="flow-node b-node" onclick="this.classList.toggle('open')">
+        <div class="nlabel">¿Múltiples loci improntados?</div>
+        <h4>MLID — alteración multilocus de impronta</h4>
+        <p>Hipometilación en varias DMRs</p>
+        <div class="detail">Si la pérdida de metilación afecta a múltiples loci, sospechar MLID:<ul><li>Panel de metilación multisitio / NGS de metilación</li><li>Genes efectores maternos (SCMC): NLRP5, NLRP2, NLRP7, PADI6, KHDC3L, OOEP, TLE6</li><li>ZFP57 (variante zigótica)</li></ul>Implica posible riesgo de recurrencia en futuras gestaciones.</div>
+      </div>
+
+      <div class="result-box navy" style="max-width:560px;margin-top:26px">
+        <h3>Principio integrador</h3>
+        <p>El diagnóstico en síndromes de impronta requiere integrar <b>metilación</b> + <b>estructura genómica</b> + <b>origen parental</b>. Ninguna técnica aislada cubre los tres ejes.</p>
+      </div>
+    </div>
+
+    <div class="note">
+      <b>Uso educativo.</b> Esquema orientativo basado en el flujo diagnóstico general. La secuencia concreta de pruebas depende de la sospecha clínica, la disponibilidad técnica del laboratorio y las guías vigentes.
+    </div>
+  </section>
+
+  <!-- ============ TAB 3: SYNDROME SELECTOR ============ -->
+  <section class="panel" id="syn">
+    <h2 class="section-title">Ruta diagnóstica por síndrome</h2>
+    <p class="section-lead">Selecciona un síndrome para ver su locus, la distribución aproximada de mecanismos moleculares y la ruta diagnóstica orientativa.</p>
+
+    <div class="syn-grid" id="syn-grid"></div>
+    <div class="syn-detail" id="syn-detail"></div>
+
+    <div class="note">
+      <b>Sobre las cifras.</b> Los porcentajes de mecanismos son aproximados y se expresan como rangos cuando la literatura no converge en un valor único; provienen de las referencias citadas abajo (GeneReviews, consensos internacionales y guías EMQN/ACGS). Verificar siempre contra las guías vigentes antes de cualquier uso formativo o clínico.
+    </div>
+
+    <div class="refs">
+      <h6>Referencias</h6>
+      <ul>
+        <li>Eggermann T, et al. Imprinting disorders. <i>Nat Rev Dis Primers.</i> 2023;9(1):33.</li>
+        <li>Monk D, Mackay DJG, Eggermann T, et al. Genomic imprinting disorders. <i>Nat Rev Genet.</i> 2019;20(4):235–248.</li>
+        <li>Beygo J, et al. Update of the EMQN/ACGS best practice guidelines for molecular analysis of Prader-Willi and Angelman syndromes. <i>Eur J Hum Genet.</i> 2019;27(9):1326–1340.</li>
+        <li>Eggermann K, et al. EMQN best practice guidelines for the molecular genetic testing and reporting of chromosome 11p15 imprinting disorders (Silver-Russell y Beckwith-Wiedemann). <i>Eur J Hum Genet.</i> 2016;24(10):1377–1387.</li>
+        <li>Brioude F, et al. Clinical and molecular diagnosis, screening and management of Beckwith-Wiedemann syndrome: an international consensus statement. <i>Nat Rev Endocrinol.</i> 2018;14(4):229–249.</li>
+        <li>Wakeling EL, et al. Diagnosis and management of Silver-Russell syndrome: first international consensus statement. <i>Nat Rev Endocrinol.</i> 2017;13(2):105–124.</li>
+        <li>Ogata T, Kagami M. Kagami-Ogata syndrome: a clinically recognizable upd(14)pat and related disorder affecting the chromosome 14q32.2 imprinted region. <i>J Hum Genet.</i> 2016;61(2):87–94.</li>
+        <li>Mackay DJG, Temple IK. Diabetes Mellitus, 6q24-Related Transient Neonatal. <i>GeneReviews®.</i> University of Washington, Seattle (actualizado).</li>
+        <li>Eggermann T, et al. Trans-acting genetic variants causing multilocus imprinting disturbance (MLID): common mechanisms and consequences. <i>Clin Epigenetics.</i> 2022;14(1):41.</li>
+        <li>Thiele S, et al. From pseudohypoparathyroidism to inactivating PTH/PTHrP signalling disorder (iPPSD): an EuroPHP network proposal. <i>Eur J Endocrinol.</i> 2016;175(6):P1–P17.</li>
+        <li>Del Gaudio D, et al. Diagnostic testing for uniparental disomy: a points to consider statement from the ACMG. <i>Genet Med.</i> 2020;22(7):1133–1141.</li>
+      </ul>
+    </div>
+  </section>
+
+  <div class="feedback">
+    <a href="#" id="feedback-link" target="_blank" rel="noopener">✎ Enviar comentarios sobre esta herramienta</a>
+    <p>Tu retroalimentación ayuda a mejorar las herramientas de GenomiKmente.</p>
+  </div>
+
+</div>
+
+<footer>
+  <div class="wrap">
+    <span class="brand">GENOMIKMENTE</span>
+    <span class="by">by Lidia Segura</span>
+  </div>
+</footer>
+
+<script>
+/* ---------- Tabs ---------- */
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.tab).classList.add('active');
+    window.scrollTo({top:0,behavior:'smooth'});
+  });
+});
+
+/* ---------- Feedback link (replace with your Google Form URL) ---------- */
+document.getElementById('feedback-link').href = 'https://forms.gle/k22RnkVECRcJQxXe9';
+
+/* ---------- Decision tree data ---------- */
+const TREE = {
+  start:{
+    tag:'Paso 1 · Punto de partida',
+    title:'Sospecha clínica de trastorno de impronta',
+    desc:'El fenotipo orienta la región a estudiar. ¿Cuál es el escenario?',
+    track:'Sospecha',
+    options:[
+      {label:'Tengo una sospecha clínica definida',sub:'Continuar al cribado de primera línea',badge:'→',next:'msmlpa'}
+    ]
+  },
+  msmlpa:{
+    tag:'Paso 2 · Primera línea',
+    title:'MS-MLPA — cribado dirigido',
+    desc:'Evalúa metilación y número de copias a la vez. ¿Qué muestra el resultado?',
+    track:'MS-MLPA',
+    options:[
+      {label:'Metilación alterada + CNV',sub:'Se detecta deleción o duplicación',badge:'A',next:'A'},
+      {label:'Metilación alterada SIN CNV',sub:'Sin cambio en número de copias',badge:'B',next:'B',blue:true},
+      {label:'Resultado normal, pero alta sospecha clínica',sub:'No concluyente',badge:'C',next:'C'}
+    ]
+  },
+  A:{
+    tag:'Rama A · Resultado',
+    title:'Alteración estructural',
+    desc:'La presencia de CNV apunta a una causa estructural.',
+    track:'Rama A',
+    result:{
+      cls:'',
+      h:'Sospecha: deleción / duplicación',
+      body:'Confirmar y delimitar la alteración estructural.',
+      list:['SNP array — delimita extensión y detecta LOH','FISH / qPCR — confirmación dirigida de la deleción'],
+      pills:['SNP array','FISH','qPCR']
+    }
+  },
+  B:{
+    tag:'Rama B · Resultado',
+    title:'Metilación alterada SIN CNV',
+    desc:'Sin cambio en número de copias, hay que distinguir UPD de defecto epigenético. La confirmación de UPD se apoya en STRs en trío, con SNP-array como estudio complementario.',
+    track:'Rama B',
+    options:[
+      {label:'Continuar al estudio de UPD',sub:'STRs en trío ± SNP-array',badge:'→',next:'B_workup',blue:true}
+    ]
+  },
+  B_workup:{
+    tag:'Rama B · Estudio de UPD',
+    title:'STRs en trío (± SNP-array)',
+    desc:'Los STRs en trío son el estándar de confirmación de UPD: confirman el origen parental y captan la heterodisomía. El SNP-array es complementario (LOH/isodisomía, CNV submicroscópica, mosaicismo, extensión) y un LOH aislado no es diagnóstico de UPD. El orden depende del contexto y del laboratorio. ¿Se confirma UPD?',
+    track:'STRs ± SNP-array',
+    options:[
+      {label:'Sí, se confirma UPD',sub:'Patrón compatible con disomía uniparental',badge:'✓',next:'B_upd',blue:true},
+      {label:'No se confirma UPD',sub:'Origen biparental conservado',badge:'✕',next:'B_epi'}
+    ]
+  },
+  B_upd:{
+    tag:'Rama B · Diagnóstico',
+    title:'Disomía uniparental confirmada',
+    desc:'',
+    track:'UPD',
+    result:{
+      cls:'blue',
+      h:'UPD confirmada',
+      body:'Los STRs en trío confirman el origen parental y el tipo de disomía (el SNP-array complementa con extensión y mosaicismo). La distinción isodisomía / heterodisomía tiene consecuencias clínicas:',
+      table:`<table class="iso-table">
+        <tr><th>Tipo</th><th>Riesgo adicional</th></tr>
+        <tr><td>Isodisomía</td><td>Homocigosis para variantes recesivas en el cromosoma implicado</td></tr>
+        <tr><td>Heterodisomía</td><td>Generalmente sin riesgo añadido</td></tr>
+      </table>`,
+      note:'La isodisomía suele originarse por rescate de una trisomía/monosomía y puede desenmascarar enfermedad recesiva aunque el locus no esté improntado.',
+      pills:['Isodisomía','Heterodisomía','Origen parental']
+    }
+  },
+  B_epi:{
+    tag:'Rama B · Defecto epigenético',
+    title:'Defecto de impronta primario / epimutación',
+    desc:'Sin UPD ni CNV, la alteración es epigenética. ¿La pérdida de metilación afecta a múltiples loci improntados?',
+    track:'Epimutación',
+    options:[
+      {label:'Sí, múltiples loci afectados',sub:'Patrón de hipometilación multilocus',badge:'→',next:'B_mlid',blue:true},
+      {label:'No, locus único',sub:'Epimutación aislada',badge:'→',next:'B_single'}
+    ]
+  },
+  B_mlid:{
+    tag:'Rama B · Diagnóstico',
+    title:'MLID — alteración multilocus de impronta',
+    desc:'',
+    track:'MLID',
+    result:{
+      cls:'navy',
+      h:'Hipometilación en múltiples DMRs (MLID)',
+      body:'La afectación de varios loci improntados sugiere MLID (predomina la pérdida de metilación). Estudios sugeridos:',
+      list:['Panel de metilación multisitio (MS-MLPA multilocus)','NGS / array de metilación','Secuenciación de genes efectores maternos (complejo subcortical materno, SCMC): NLRP5, NLRP2, NLRP7, PADI6, KHDC3L, OOEP, TLE6','ZFP57 (variante zigótica), ligado a la TNDM-MLID'],
+      note:'Relevancia reproductiva: las variantes de efecto materno pueden implicar riesgo de recurrencia elevado en futuras gestaciones.',
+      pills:['Panel multilocus','NGS metilación','SCMC','ZFP57']
+    }
+  },
+  B_single:{
+    tag:'Rama B · Diagnóstico',
+    title:'Epimutación aislada',
+    desc:'',
+    track:'Locus único',
+    result:{
+      cls:'',
+      h:'Defecto de metilación primario en un solo locus',
+      body:'Confirmar y caracterizar la epimutación.',
+      list:['Bisulfito-PCR / secuenciación de metilación','Valorar mosaicismo de metilación','Reevaluar multilocus si reaparece o hay rasgos atípicos'],
+      pills:['Bisulfito-PCR','Secuenciación de metilación']
+    }
+  },
+  C:{
+    tag:'Rama C · Resultado',
+    title:'Resultado normal con alta sospecha',
+    desc:'Un MS-MLPA normal no descarta el diagnóstico.',
+    track:'Rama C',
+    result:{
+      cls:'',
+      h:'Escalar a estudios de metilación avanzados',
+      body:'Considerar mecanismos no captados por el cribado inicial.',
+      list:['Mosaicismo de metilación','Defectos epigenéticos sutiles','Bisulfito + secuenciación / NGS de metilación (epigenoma)'],
+      pills:['Mosaicismo','Defectos sutiles','NGS de metilación']
+    }
+  }
+};
+
+let path=['start'];
+const stage=document.getElementById('tree-stage');
+const trackEl=document.getElementById('track');
+
+function renderTrack(){
+  const labels=path.map(k=>TREE[k].track);
+  trackEl.innerHTML=labels.map((l,i)=>{
+    const cls=i===labels.length-1?'current':'done';
+    return `<span class="track-dot ${cls}">${l}</span>`;
+  }).join('');
+}
+
+function renderNode(key){
+  const n=TREE[key];
+  let html=`<div class="card">`;
+  if(path.length>1){
+    html+=`<button class="back-link" onclick="goBack()">← Volver</button>`;
+  }
+  html+=`<span class="q-tag">${n.tag}</span>`;
+  html+=`<div class="q-title">${n.title}</div>`;
+  if(n.desc) html+=`<div class="q-help">${n.desc}</div>`;
+
+  if(n.options){
+    html+=`<div class="options">`;
+    n.options.forEach((o)=>{
+      const isLetter=/^[A-C]$/.test(o.badge);
+      const tag=isLetter?`<span class="tag ${o.blue?'blue':''}">${o.badge}</span>`:'';
+      html+=`<button class="opt" onclick="choose('${o.next}')">
+        <span class="otext"><strong>${tag}${o.label}</strong><span class="sm">${o.sub}</span></span>
+        <span class="chev">&rsaquo;</span>
+      </button>`;
+    });
+    html+=`</div>`;
+  }
+  if(n.result){
+    const r=n.result;
+    html+=`<div class="result-box ${r.cls}">
+      <h3>${r.h}</h3>
+      <p>${r.body}</p>
+      ${r.list?`<ul>${r.list.map(i=>`<li>${i}</li>`).join('')}</ul>`:''}
+      ${r.table?r.table:''}
+      ${r.note?`<p class="rb-note">${r.note}</p>`:''}
+      ${r.pills?`<div>${r.pills.map(p=>`<span class="pill">${p}</span>`).join('')}</div>`:''}
+    </div>
+    <button class="reset-btn" onclick="resetTree()">↺ Reiniciar el árbol</button>`;
+  }
+  html+=`</div>`;
+  stage.innerHTML=html;
+  renderTrack();
+}
+
+function choose(next){path.push(next);renderNode(next);}
+function goBack(){path.pop();renderNode(path[path.length-1]);}
+function resetTree(){path=['start'];renderNode('start');}
+renderNode('start');
+
+/* ---------- Syndrome data ---------- */
+const SYN=[
+  {abbr:'PWS',full:'Síndrome de Prader-Willi',locus:'15q11-q13',
+   summary:'Pérdida de la expresión de los genes de origen <b>paterno</b> en 15q11-q13.',
+   mech:[['Deleción paterna','65–75%',70],['UPD materna (15)','20–30%',25],['Defecto de impronta','1–3%',3]],
+   route:['MS-MLPA 15q11-q13','SNP array (deleción / UPD)','STRs si se requiere confirmar UPD']},
+  {abbr:'AS',full:'Síndrome de Angelman',locus:'15q11-q13',
+   summary:'Pérdida de función del alelo <b>materno</b> de <i>UBE3A</i> en 15q11-q13.',
+   mech:[['Deleción materna','~70%',70],['Variante en UBE3A','~11%',11],['UPD paterna (15)','3–7%',7],['Defecto de impronta','~3%',3]],
+   route:['MS-MLPA 15q11-q13','Secuenciación de UBE3A (si MS-MLPA normal)','STRs para distinguir UPD de defecto de impronta']},
+  {abbr:'BWS',full:'Síndrome de Beckwith-Wiedemann',locus:'11p15.5',
+   summary:'Espectro de <b>sobrecrecimiento</b> por desregulación de 11p15.5 (IC1/IC2).',
+   mech:[['Pérdida de metilación IC2 (KCNQ1OT1)','~50%',50],['UPD paterna (11)','~20%',20],['Ganancia de metilación IC1 (H19/IGF2)','5–10%',8],['Variante en CDKN1C','~5%',5]],
+   note:'CDKN1C representa ~5% de los casos esporádicos pero hasta ~40% de los familiares.',
+   route:['MS-MLPA 11p15','SNP array / STRs (UPD)','Secuenciación CDKN1C si MS-MLPA normal']},
+  {abbr:'SRS',full:'Síndrome de Silver-Russell',locus:'11p15 / 7',
+   summary:'<b>Restricción del crecimiento</b> con rasgos característicos; afecta 11p15 (H19/IGF2) o la UPD materna del cromosoma 7.',
+   mech:[['Hipometilación H19/IGF2 (IC1)','30–60%',45],['UPD materna (7)','≤10%',8]],
+   note:'El kit de MS-MLPA de 11p15 (p. ej. ME030) incluye sondas de los DMR de MEST y GRB10 en el cromosoma 7, pero la confirmación fiable de la UPD7 (iso/heterodisomía y origen parental) se realiza por microsatélites en trío. Una proporción importante de los casos con diagnóstico clínico (criterios Netchine-Harbison) no presenta alteración molecular identificable.',
+   route:['MS-MLPA 11p15','Análisis de UPD7 (microsatélites en trío)','Estudios de metilación avanzados si normal']},
+  {abbr:'TS14',full:'Síndrome de Temple',locus:'14q32 (DLK1/MEG3)',
+   summary:'Pérdida del patrón <b>paterno</b> en 14q32: UPD materna 14, epimutación (LOM) o deleción.',
+   mech:[['UPD materna (14)','~70%',70],['Epimutación (LOM MEG3)','~20%',20],['Deleción','~10%',10]],
+   note:'Frecuencias en discusión: cohortes europeas recientes describen mayor proporción de epimutaciones y deleciones que las series iniciales.',
+   route:['MS-MLPA 14q32','STRs (confirmar UPD14)','SNP array según resultado']},
+  {abbr:'KOS14',full:'Síndrome de Kagami-Ogata',locus:'14q32 (DLK1/MEG3)',
+   summary:'Patrón opuesto a Temple: exceso de contribución <b>paterna</b> en 14q32.',
+   mech:[['UPD paterna (14)','~50%',50],['Epimutación (hipermetilación)','~25%',25],['Deleción','~20%',20]],
+   route:['MS-MLPA 14q32','STRs (confirmar UPD14)','SNP array según resultado']},
+  {abbr:'TNDM',full:'Diabetes neonatal transitoria (6q24)',locus:'6q24',
+   summary:'Hiperglucemia neonatal por sobreexpresión de <b>PLAGL1/HYMAI</b> (alelo paterno) en 6q24.',
+   mech:[['UPD paterna (6)','~41%',41],['Duplicación paterna 6q24','~33%',33],['Hipometilación PLAGL1 (ICR)','~26%',26]],
+   note:'~60% de las hipometilaciones de PLAGL1 cursan con MLID; cerca de la mitad de la TNDM-MLID se debe a variantes bialélicas de ZFP57. La UPD6 paterna es mayoritariamente isodisomía completa.',
+   route:['MS-MLPA 6q24','SNP array / STRs (UPD6 vs duplicación)','Estudio MLID / ZFP57 si hipometilación']},
+  {abbr:'PHP1B',full:'Pseudohipoparatiroidismo 1B (iPPSD3)',locus:'GNAS · 20q13.32',
+   summary:'Resistencia a PTH por <b>pérdida de metilación</b> en GNAS A/B:TSS-DMR (alelo materno).',
+   mech:[['Esporádico — defecto epigenético multi-DMR','la mayoría',62],['AD — deleción materna STX16','~10%',12],['Otras alteraciones GNAS (del/dup/inv)','poco frecuente',14],['UPD paterna 20','infrecuente',8]],
+   note:'Rasgo molecular constante: LOM en GNAS A/B:TSS-DMR. La resistencia hormonal solo aparece con herencia materna del defecto. Reclasificado como iPPSD3 (consenso EuroPHP, 2016).',
+   route:['MS-MLPA GNAS (metilación + STX16 / CNV)','SNP array / STRs (UPD20)','Secuenciación dirigida según patrón de DMRs']}
+];
+
+const grid=document.getElementById('syn-grid');
+const detail=document.getElementById('syn-detail');
+SYN.forEach((s,i)=>{
+  const c=document.createElement('button');
+  c.className='syn-card';
+  c.innerHTML=`<div class="abbr">${s.abbr}</div><div class="full">${s.full}</div><span class="locus">${s.locus}</span>`;
+  c.onclick=()=>{
+    document.querySelectorAll('.syn-card').forEach(x=>x.classList.remove('active'));
+    c.classList.add('active');
+    showSyn(i);
+  };
+  grid.appendChild(c);
+});
+
+function showSyn(i){
+  const s=SYN[i];
+  detail.innerHTML=`
+    <h3>${s.full}</h3>
+    <p class="meta"><b>${s.abbr}</b> · Locus ${s.locus}<br>${s.summary}</p>
+    <div class="det-block">
+      <h5>Distribución aproximada de mecanismos</h5>
+      ${s.mech.map(m=>`
+        <div class="mech-row">
+          <span class="mname">${m[0]}</span>
+          <span class="bar-track"><span class="bar" style="width:${m[2]}%"></span></span>
+          <span class="pct">${m[1]}</span>
+        </div>`).join('')}
+      ${s.note?`<p class="syn-note">Nota: ${s.note}</p>`:''}
+    </div>
+    <div class="det-block">
+      <h5>Ruta diagnóstica orientativa</h5>
+      <div class="route">
+        ${s.route.map((r,idx)=>`${idx>0?'<span class="rarrow">→</span>':''}<span class="rstep ${idx===0?'first':''}">${r}</span>`).join('')}
+      </div>
+    </div>`;
+  detail.classList.add('show');
+  detail.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+</script>
+</body>
+</html>
