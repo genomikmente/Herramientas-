@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vocabulario en Genética · GenomiKmente</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0D1B2A;
+    --coral:#E8604A;
+    --cream:#FAF8F5;
+    --blue:#5B8DB8;
+    --ink:#2b3440;
+    --muted:#6b7684;
+    --card:#ffffff;
+    --line:#e7e1d8;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:'DM Sans',system-ui,sans-serif;
+    background:var(--cream);
+    color:var(--ink);
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1080px;margin:0 auto;padding:0 20px}
+
+  header.hero{
+    background:var(--navy);
+    color:var(--cream);
+    padding:42px 0 34px;
+  }
+  header.hero .kicker{
+    font-size:.72rem;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--blue);font-weight:700;margin-bottom:10px;
+  }
+  header.hero h1{
+    font-family:'Playfair Display',serif;
+    font-weight:700;font-size:2.5rem;line-height:1.08;letter-spacing:-.01em;
+  }
+  header.hero h1 span{color:var(--coral)}
+  header.hero p{color:#c7cfd9;max-width:640px;margin-top:12px;font-size:1.02rem}
+
+  .controls{
+    position:sticky;top:0;z-index:20;
+    background:var(--cream);
+    padding:18px 0 12px;
+    border-bottom:1px solid var(--line);
+  }
+  .search{position:relative}
+  .search input{
+    width:100%;padding:14px 16px 14px 46px;
+    border:1.5px solid var(--line);border-radius:12px;
+    font-family:inherit;font-size:1rem;background:#fff;color:var(--ink);
+    transition:border-color .15s;
+  }
+  .search input:focus{outline:none;border-color:var(--blue)}
+  .search svg{position:absolute;left:16px;top:50%;transform:translateY(-50%);color:var(--muted)}
+
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+  .chip{
+    border:1.5px solid var(--line);background:#fff;color:var(--muted);
+    padding:6px 14px;border-radius:999px;font-size:.86rem;font-weight:500;
+    cursor:pointer;font-family:inherit;transition:all .15s;
+  }
+  .chip:hover{border-color:var(--blue);color:var(--navy)}
+  .chip.active{background:var(--navy);border-color:var(--navy);color:#fff}
+
+  .count{color:var(--muted);font-size:.85rem;margin:18px 0 6px}
+
+  .grid{
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
+    gap:16px;padding-bottom:20px;
+  }
+  .card{
+    background:var(--card);border:1px solid var(--line);border-radius:14px;
+    padding:20px;display:flex;flex-direction:column;gap:8px;
+    transition:transform .12s,box-shadow .12s;
+  }
+  .card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(13,27,42,.08)}
+  .card .cat{
+    align-self:flex-start;font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;
+    font-weight:700;color:#fff;background:var(--blue);padding:3px 9px;border-radius:6px;
+  }
+  .card h3{
+    font-family:'Playfair Display',serif;font-weight:600;font-size:1.28rem;
+    color:var(--navy);line-height:1.15;
+  }
+  .card p{font-size:.95rem;color:var(--ink)}
+  .card .note{
+    font-size:.85rem;color:var(--muted);border-left:3px solid var(--coral);
+    padding-left:10px;margin-top:2px;
+  }
+
+  .empty{text-align:center;color:var(--muted);padding:60px 20px;font-size:1rem}
+
+  footer{
+    background:var(--navy);color:#aeb8c4;padding:30px 0;margin-top:20px;
+    font-size:.85rem;
+  }
+  footer strong{color:var(--cream)}
+  footer a{color:var(--blue);text-decoration:none}
+  footer a:hover{text-decoration:underline}
+
+  mark{background:#ffe6b3;color:inherit;padding:0 1px;border-radius:2px}
+
+  @media(max-width:560px){
+    header.hero h1{font-size:1.9rem}
+    .grid{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="kicker">GenomiKmente · Glosario</div>
+    <h1>Vocabulario en <span>Genética</span></h1>
+    <p>Los términos fundamentales de la genética, explicados con claridad. Buscá una palabra o filtrá por tema para entender el lenguaje detrás de tus genes.</p>
+  </div>
+</header>
+
+<div class="controls">
+  <div class="wrap">
+    <div class="search">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input id="q" type="text" placeholder="Buscar un término… (ej. alelo, mutación, cromosoma)" autocomplete="off">
+    </div>
+    <div class="chips" id="chips"></div>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="count" id="count"></div>
+  <div class="grid" id="grid"></div>
+  <div class="empty" id="empty" style="display:none">No encontramos ese término. Probá con otra palabra.</div>
+</div>
+
+<footer>
+  <div class="wrap">
+    <p><strong>GenomiKmente</strong> · Contenido educativo en genómica clínica. Este glosario tiene fines divulgativos y no reemplaza la evaluación de un profesional.</p>
+    <p style="margin-top:8px">¿Sugerencias o un término que falta? <a href="https://forms.gle/k22RnkVECRcJQxXe9" target="_blank" rel="noopener">Dejanos tu feedback</a>.</p>
+  </div>
+</footer>
+
+<script>
+const TERMS = [
+  {t:"Gen", c:"Fundamentos", d:"Unidad básica de la herencia: un fragmento de ADN con las instrucciones para fabricar una molécula, generalmente una proteína. Los genes se transmiten de padres a hijos."},
+  {t:"ADN", c:"Fundamentos", d:"Ácido desoxirribonucleico. La molécula que almacena, en forma de código químico, toda la información para construir y mantener un organismo. Tiene forma de doble hélice."},
+  {t:"ARN", c:"Fundamentos", d:"Ácido ribonucleico. Molécula que copia la información del ADN y ayuda a traducirla en proteínas. El ARN mensajero (ARNm) lleva el mensaje del gen al lugar donde se fabrica la proteína."},
+  {t:"Genoma", c:"Fundamentos", d:"El conjunto completo de ADN de un organismo, incluyendo todos sus genes. El genoma humano tiene unos 3.000 millones de 'letras' (bases)."},
+  {t:"Genética vs. Genómica", c:"Fundamentos", d:"La genética estudia genes individuales y cómo se heredan; la genómica estudia el genoma completo y cómo interactúan todos los genes entre sí y con el ambiente.", note:"La genómica es una mirada más amplia e integradora que la genética clásica."},
+  {t:"Nucleótido", c:"Estructura del ADN", d:"La 'pieza' que forma el ADN y el ARN. Cada nucleótido tiene una base nitrogenada, un azúcar y un fosfato. Encadenados forman la molécula."},
+  {t:"Base nitrogenada", c:"Estructura del ADN", d:"Las 'letras' del código genético. En el ADN son cuatro: adenina (A), timina (T), citosina (C) y guanina (G). Se emparejan A–T y C–G."},
+  {t:"Doble hélice", c:"Estructura del ADN", d:"La forma en espiral del ADN, como una escalera retorcida, donde dos hebras se enrollan una sobre la otra y se unen por sus bases."},
+  {t:"Cromosoma", c:"Cromosomas", d:"Estructura donde se organiza y compacta el ADN dentro de la célula. Los humanos tenemos 46 cromosomas (23 pares)."},
+  {t:"Cariotipo", c:"Cromosomas", d:"El 'retrato' ordenado de todos los cromosomas de una persona. Permite ver su número y forma, y detectar alteraciones grandes."},
+  {t:"Autosoma", c:"Cromosomas", d:"Cualquiera de los cromosomas que no determina el sexo. Los humanos tenemos 22 pares de autosomas."},
+  {t:"Cromosoma sexual", c:"Cromosomas", d:"Los cromosomas que influyen en el sexo biológico: X e Y. Típicamente XX y XY, aunque existen otras combinaciones."},
+  {t:"Locus", c:"Cromosomas", d:"La ubicación física precisa de un gen o una secuencia dentro de un cromosoma, como una dirección en un mapa."},
+  {t:"Alelo", c:"Herencia", d:"Cada una de las versiones posibles de un mismo gen. Heredamos un alelo de cada progenitor, y pueden ser iguales o distintos."},
+  {t:"Genotipo", c:"Herencia", d:"La combinación de alelos que una persona tiene para un gen o rasgo; es decir, su 'información' genética."},
+  {t:"Fenotipo", c:"Herencia", d:"Las características observables de un organismo (color de ojos, estatura, grupo sanguíneo), resultado de la interacción entre genes y ambiente."},
+  {t:"Homocigoto", c:"Herencia", d:"Cuando las dos copias de un gen son el mismo alelo (por ejemplo, ambas iguales)."},
+  {t:"Heterocigoto", c:"Herencia", d:"Cuando las dos copias de un gen son alelos diferentes."},
+  {t:"Dominante", c:"Herencia", d:"Alelo que se expresa en el fenotipo aunque solo esté presente en una copia."},
+  {t:"Recesivo", c:"Herencia", d:"Alelo que solo se manifiesta en el fenotipo cuando está presente en las dos copias del gen."},
+  {t:"Portador", c:"Herencia", d:"Persona que tiene una copia de un alelo asociado a una condición recesiva, sin manifestarla, pero que puede transmitirla a su descendencia."},
+  {t:"Herencia autosómica dominante", c:"Herencia", d:"Patrón en el que basta una sola copia alterada de un gen (en un autosoma) para presentar el rasgo o condición. Suele verse en varias generaciones."},
+  {t:"Herencia autosómica recesiva", c:"Herencia", d:"Patrón en el que se necesitan las dos copias alteradas del gen para presentar la condición. Los progenitores suelen ser portadores sanos."},
+  {t:"Herencia ligada al X", c:"Herencia", d:"Patrón de genes ubicados en el cromosoma X. Afecta de forma distinta según el sexo, porque quienes tienen un solo X (XY) no cuentan con una segunda copia de respaldo."},
+  {t:"Herencia mitocondrial", c:"Herencia", d:"Herencia del ADN de las mitocondrias, que se transmite casi exclusivamente por vía materna."},
+  {t:"Penetrancia", c:"Herencia", d:"La probabilidad de que las personas con una variante genética efectivamente manifiesten el rasgo o condición asociada. Puede ser completa o incompleta."},
+  {t:"Expresividad", c:"Herencia", d:"Cuán intensa o variable es la manifestación de un rasgo entre personas que comparten la misma variante genética."},
+  {t:"Mutación", c:"Variación", d:"Cambio en la secuencia del ADN. Describe el mecanismo molecular: puede ser neutro, beneficioso o dañino, y es también motor de la evolución.", note:"'Mutación' describe el mecanismo; 'variante' se usa en la clasificación clínica de su efecto."},
+  {t:"Variante", c:"Variación", d:"Diferencia en el ADN respecto a una secuencia de referencia. Es el término preferido en el ámbito clínico para clasificar su posible efecto en la salud.", note:"No toda variante causa enfermedad: muchas son parte de la diversidad humana normal."},
+  {t:"Polimorfismo (SNP)", c:"Variación", d:"Variación de una sola letra del ADN que es frecuente en la población. Los SNP explican gran parte de las diferencias individuales entre personas."},
+  {t:"Mosaicismo", c:"Variación", d:"Cuando una persona tiene dos o más poblaciones de células con información genética distinta, originadas a partir de un mismo óvulo fecundado."},
+  {t:"Aneuploidía", c:"Variación", d:"Número anormal de cromosomas: falta o sobra alguno respecto a los 46 habituales."},
+  {t:"Trisomía", c:"Variación", d:"Presencia de tres copias de un cromosoma en lugar de dos. Un ejemplo conocido es la trisomía 21."},
+  {t:"Monosomía", c:"Variación", d:"Presencia de una sola copia de un cromosoma en lugar del par habitual."},
+  {t:"Célula somática", c:"Células y división", d:"Cualquier célula del cuerpo que no sea reproductiva (piel, hígado, neuronas). Sus cambios genéticos no se heredan."},
+  {t:"Gameto", c:"Células y división", d:"Célula reproductiva: óvulo o espermatozoide. Aporta la mitad de la información genética a la descendencia."},
+  {t:"Mitosis", c:"Células y división", d:"División celular que produce dos células hijas idénticas a la original. Permite el crecimiento y la reparación de tejidos."},
+  {t:"Meiosis", c:"Células y división", d:"División celular especial que produce gametos con la mitad de los cromosomas, mezclando la información de los progenitores."},
+  {t:"Ploidía", c:"Células y división", d:"El número de juegos completos de cromosomas de una célula. Las células humanas son diploides (dos juegos); los gametos, haploides (uno)."},
+  {t:"Transcripción", c:"Del gen a la proteína", d:"Proceso por el que la información de un gen se copia del ADN a una molécula de ARN mensajero."},
+  {t:"Traducción", c:"Del gen a la proteína", d:"Proceso por el que la célula lee el ARN mensajero y ensambla, aminoácido por aminoácido, una proteína."},
+  {t:"Codón", c:"Del gen a la proteína", d:"Grupo de tres letras del ARN que indica qué aminoácido colocar en la proteína, como una palabra de tres letras."},
+  {t:"Proteína", c:"Del gen a la proteína", d:"Molécula que realiza casi todas las funciones del cuerpo (enzimas, estructura, defensa). Es el producto final de la mayoría de los genes."},
+  {t:"Aminoácido", c:"Del gen a la proteína", d:"Las 'piezas' que, encadenadas según el orden que dicta el gen, forman una proteína. Existen 20 tipos."},
+  {t:"Epigenética", c:"Regulación", d:"Estudio de cambios que activan o silencian genes sin alterar la secuencia del ADN. Muchos son influidos por el ambiente y algunos son reversibles."},
+  {t:"Metilación del ADN", c:"Regulación", d:"Marca química que se añade al ADN y suele 'apagar' la expresión de un gen. Es uno de los mecanismos epigenéticos más estudiados."},
+  {t:"Expresión génica", c:"Regulación", d:"El proceso por el que la información de un gen se usa para fabricar un producto funcional (ARN o proteína). Que un gen exista no significa que esté siempre activo."},
+  {t:"Hereditario vs. congénito", c:"Fundamentos", d:"'Hereditario' es lo que se transmite de padres a hijos a través de los genes. 'Congénito' es lo que está presente al nacer, tenga o no origen genético (puede deberse, por ejemplo, a factores del embarazo).", note:"No todo lo congénito es hereditario, ni todo lo hereditario se manifiesta al nacer."},
+  {t:"Cromatina", c:"Estructura del ADN", d:"La combinación de ADN y proteínas (histonas) que forma los cromosomas. Su grado de compactación ayuda a decidir qué genes se activan o se silencian."},
+  {t:"Telómero", c:"Estructura del ADN", d:"Extremo protector de cada cromosoma, como el herrete de un cordón. Se acorta con cada división celular y se relaciona con el envejecimiento de las células."},
+  {t:"Codominancia", c:"Herencia", d:"Cuando dos alelos distintos se expresan por completo y a la vez, sin que uno domine sobre el otro. El grupo sanguíneo AB es un ejemplo clásico."},
+  {t:"Herencia multifactorial", c:"Herencia", d:"Rasgos o condiciones que resultan de la combinación de muchos genes con factores ambientales, no de un solo gen. La estatura o la diabetes tipo 2 funcionan así.", note:"También llamada poligénica cuando el foco está en la suma de múltiples genes."},
+  {t:"Variante de novo", c:"Variación", d:"Variante genética nueva que aparece por primera vez en una persona y no estaba en sus progenitores. Explica por qué algunas condiciones surgen sin antecedentes familiares."},
+  {t:"Recombinación", c:"Células y división", d:"Intercambio de fragmentos de ADN entre cromosomas emparejados durante la meiosis (entrecruzamiento). Mezcla la información de ambos progenitores y genera diversidad."},
+  {t:"Consanguinidad", c:"Herencia", d:"Parentesco biológico entre dos personas que tienen un ancestro común. En la descendencia aumenta la probabilidad de heredar dos copias del mismo alelo recesivo."}
+];
+
+const grid = document.getElementById('grid');
+const chipsBox = document.getElementById('chips');
+const q = document.getElementById('q');
+const countEl = document.getElementById('count');
+const emptyEl = document.getElementById('empty');
+
+const cats = ['Todos', ...Array.from(new Set(TERMS.map(x=>x.c)))];
+let activeCat = 'Todos';
+
+cats.forEach(c=>{
+  const b=document.createElement('button');
+  b.className='chip'+(c==='Todos'?' active':'');
+  b.textContent=c;
+  b.onclick=()=>{activeCat=c;[...chipsBox.children].forEach(x=>x.classList.remove('active'));b.classList.add('active');render();};
+  chipsBox.appendChild(b);
+});
+
+function esc(s){return s.replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));}
+function hl(text,term){
+  if(!term)return esc(text);
+  const re=new RegExp('('+term.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','ig');
+  return esc(text).replace(re,'<mark>$1</mark>');
+}
+
+function render(){
+  const query=q.value.trim().toLowerCase();
+  const list=TERMS.filter(x=>{
+    const okCat=activeCat==='Todos'||x.c===activeCat;
+    const okQ=!query||x.t.toLowerCase().includes(query)||x.d.toLowerCase().includes(query);
+    return okCat&&okQ;
+  }).sort((a,b)=>a.t.localeCompare(b.t,'es'));
+
+  grid.innerHTML='';
+  if(!list.length){emptyEl.style.display='block';countEl.textContent='';return;}
+  emptyEl.style.display='none';
+  countEl.textContent=list.length+(list.length===1?' término':' términos');
+
+  list.forEach(x=>{
+    const card=document.createElement('article');
+    card.className='card';
+    card.innerHTML=
+      '<span class="cat">'+esc(x.c)+'</span>'+
+      '<h3>'+hl(x.t,query)+'</h3>'+
+      '<p>'+hl(x.d,query)+'</p>'+
+      (x.note?'<p class="note">'+esc(x.note)+'</p>':'');
+    grid.appendChild(card);
+  });
+}
+
+q.addEventListener('input',render);
+render();
+</script>
+</body>
+</html>
