@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Thalassemia Toolkit · NASL × GenomiKmente</title>
+<meta name="description" content="Interactive educational tools on alpha- and beta-thalassemia: genotype–phenotype explorer and reproductive risk calculator. NASL in collaboration with @genomikmente.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* NASL palette (from the NASL × @genomikmente series) */
+  --lav:#B49BCA; --purple:#350A5B; --navy:#282942; --beige:#CABEB1; --orange:#F5632A; --amber:#FBB63E;
+  --purple-2:#6B3FA8; --lav-2:#E9E0F3; --lav-3:#F3EEF8; --bg:#FAF3EE; --white:#FFFFFF;
+  --ink:#1F1B33; --muted:#5E5870; --line:rgba(53,10,91,.12); --line-2:rgba(53,10,91,.22);
+  /* severity scale */
+  --s0-bg:#EFE9E1; --s0-fg:#5E5870;   /* unaffected / no carrier */
+  --s1-bg:#EEE6F8; --s1-fg:#5B2A91;   /* silent carrier */
+  --s2-bg:#DCCBF0; --s2-fg:#350A5B;   /* trait / carrier */
+  --s3-bg:#FDEBC4; --s3-fg:#8A5600;   /* HbH / NTDT (intermedia) */
+  --s4-bg:#FCD6C5; --s4-fg:#B23A0B;   /* Hb Bart's / TDT (major) */
+  --sans:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --serif:"Playfair Display",Georgia,serif;
+  --r:18px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{font-family:var(--sans);background:var(--bg);color:var(--ink);line-height:1.55;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:radial-gradient(700px 520px at 92% 4%,rgba(180,155,202,.35),transparent 65%),
+             radial-gradient(600px 500px at -5% 60%,rgba(245,99,42,.08),transparent 60%)}
+.wrap{max-width:1120px;margin:0 auto;padding:0 22px}
+button{font-family:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--orange);outline-offset:3px;border-radius:8px}
+sup{font-size:.62em;line-height:0;position:relative;top:-.5em}
+[hidden]{display:none!important}
+
+/* ---------- Header ---------- */
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;padding:26px 0 0}
+.brand .nasl{font-family:var(--serif);font-weight:800;font-size:22px;color:var(--purple);letter-spacing:.01em;line-height:1}
+.kick{font-size:10.5px;letter-spacing:.24em;text-transform:uppercase;color:var(--navy);font-weight:600}
+.brand .kick{margin-top:6px}
+.collab{text-align:right;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--navy);line-height:1.6}
+.collab a{color:var(--purple-2);text-decoration:none}
+.hero{padding:40px 0 30px}
+.eyebrow{font-size:12px;letter-spacing:.2em;text-transform:uppercase;font-weight:700;color:var(--orange);margin-bottom:12px}
+h1{font-weight:900;font-size:clamp(38px,6vw,68px);line-height:.98;letter-spacing:-.045em;color:var(--navy)}
+h1 span{color:var(--purple-2)}
+.rule{width:52px;height:4px;border-radius:2px;background:var(--orange);margin:22px 0 18px}
+.lead{max-width:62ch;font-size:17px;color:var(--muted)}
+.lead b{color:var(--purple)}
+
+/* ---------- Main tabs ---------- */
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:8px 0 22px}
+.tab{display:flex;gap:14px;align-items:center;text-align:left;padding:16px 18px;border-radius:var(--r);border:1.5px solid var(--line);
+  background:rgba(255,255,255,.65);backdrop-filter:blur(6px);transition:all .2s ease;color:var(--ink)}
+.tab:hover{border-color:var(--lav)}
+.tab .n{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;background:var(--lav-2);color:var(--purple);flex-shrink:0}
+.tab strong{display:block;font-size:16px;font-weight:800;letter-spacing:-.01em}
+.tab small{display:block;font-size:13px;color:var(--muted)}
+.tab.on{background:var(--purple);border-color:var(--purple);color:#fff}
+.tab.on .n{background:var(--orange);color:#fff}
+.tab.on small{color:rgba(255,255,255,.72)}
+
+/* ---------- Panels ---------- */
+.panel{display:none}
+.panel.on{display:block;animation:fade .35s ease}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.card{background:var(--white);border:1px solid var(--line);border-radius:22px;padding:26px;box-shadow:0 18px 50px -30px rgba(53,10,91,.35)}
+.seg{display:inline-flex;background:var(--lav-3);border:1px solid var(--line);border-radius:100px;padding:4px;gap:4px;margin-bottom:22px}
+.seg button{border:0;background:transparent;padding:9px 18px;border-radius:100px;font-weight:700;font-size:14px;color:var(--muted);transition:all .18s}
+.seg button.on{background:var(--white);color:var(--purple);box-shadow:0 2px 8px rgba(53,10,91,.14)}
+.seg button .g{font-family:var(--serif);font-size:16px;margin-right:4px}
+.grid2{display:grid;grid-template-columns:1fr 1.05fr;gap:26px;align-items:start}
+.label{font-size:11px;letter-spacing:.2em;text-transform:uppercase;font-weight:700;color:var(--muted);margin-bottom:12px}
+.hint{font-size:13px;color:var(--muted);margin-top:10px}
+
+/* chromosome 16 */
+.chrom{display:flex;align-items:center;gap:14px;padding:16px;border:1px solid var(--line);border-radius:16px;background:var(--lav-3);margin-bottom:12px}
+.chrom .cid{width:74px;flex-shrink:0;font-size:11px;font-weight:700;color:var(--muted);line-height:1.3}
+.chrom .cid b{display:block;font-size:14px;color:var(--purple)}
+.bar{flex:1;display:flex;align-items:center;gap:10px;position:relative;padding:6px 0}
+.bar::before{content:"";position:absolute;left:0;right:0;top:50%;height:10px;margin-top:-5px;border-radius:6px;background:linear-gradient(90deg,var(--beige),#e2d8cd)}
+.gene{position:relative;z-index:1;flex:1;border:2px solid var(--purple);background:var(--purple);color:#fff;border-radius:12px;padding:10px 8px;font-weight:800;font-size:14px;transition:all .18s}
+.gene small{display:block;font-weight:500;font-size:10.5px;opacity:.8}
+.gene:hover{transform:translateY(-1px)}
+.gene.off{background:var(--white);color:var(--muted);border-style:dashed;border-color:var(--line-2)}
+.gene.off small::after{content:" · deleted"}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.preset{border:1px solid var(--line-2);background:var(--white);border-radius:100px;padding:6px 12px;font-size:13px;font-weight:600;color:var(--purple);font-family:var(--serif)}
+.preset:hover{border-color:var(--purple)}
+.preset.on{background:var(--purple);color:#fff;border-color:var(--purple)}
+
+/* beta alleles */
+.allele{padding:16px;border:1px solid var(--line);border-radius:16px;background:#FFF6F1;margin-bottom:12px}
+.allele .head{display:flex;justify-content:space-between;font-size:12px;font-weight:700;color:var(--muted);margin-bottom:10px}
+.allele .head b{color:var(--orange)}
+.opts3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.opt{border:1.5px solid var(--line-2);background:var(--white);border-radius:12px;padding:10px 6px;text-align:center;transition:all .18s;color:var(--ink)}
+.opt .sym{display:block;font-family:var(--serif);font-weight:800;font-size:22px;line-height:1.1;color:var(--orange)}
+.opt small{display:block;font-size:11px;color:var(--muted);margin-top:2px}
+.opt.on{border-color:var(--orange);background:#FFE8DD}
+
+/* result */
+.result{border-radius:18px;padding:22px;border:1px solid var(--line);background:linear-gradient(160deg,#fff,var(--lav-3))}
+.geno{font-family:var(--serif);font-weight:800;font-size:40px;color:var(--navy);letter-spacing:.01em;line-height:1.1}
+.pheno{display:inline-block;margin:10px 0 6px;padding:6px 12px;border-radius:10px;font-weight:800;font-size:15px}
+.s0{background:var(--s0-bg);color:var(--s0-fg)} .s1{background:var(--s1-bg);color:var(--s1-fg)} .s2{background:var(--s2-bg);color:var(--s2-fg)}
+.s3{background:var(--s3-bg);color:var(--s3-fg)} .s4{background:var(--s4-bg);color:var(--s4-fg)}
+.desc{font-size:14.5px;color:var(--ink);margin-bottom:14px}
+.facts{list-style:none;display:grid;gap:8px;margin-bottom:14px}
+.facts li{font-size:13.5px;color:var(--ink);padding-left:18px;position:relative}
+.facts li::before{content:"";position:absolute;left:0;top:8px;width:7px;height:7px;border-radius:50%;background:var(--orange)}
+.meter{margin:14px 0 16px}
+.meter .row{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--muted);margin-bottom:6px}
+.meter .row > span:first-child{width:92px;flex-shrink:0;font-weight:600}
+.beads{display:flex;gap:4px;flex-wrap:wrap}
+.bead{width:14px;height:14px;border-radius:50%;background:var(--lav)}
+.bead.b{background:var(--beige)} .bead.x{background:transparent;border:1.5px dashed var(--line-2)}
+.bead.ex{background:var(--orange)}
+.spectrum{margin:6px 0 16px}
+.spectrum .track{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+.spectrum .seg4{height:10px;border-radius:6px;background:#EDE7F1}
+.spectrum .seg4.hl{background:var(--orange)}
+.spectrum .labs{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-top:6px;font-size:11px;color:var(--muted);text-align:center;line-height:1.25}
+.callout{display:flex;gap:12px;padding:14px 16px;border-radius:14px;background:var(--lav-2);font-size:13.5px;color:var(--purple);margin-top:10px}
+.callout.warn{background:#FFEBDD;color:#8A2C06}
+.callout .ic{flex-shrink:0;font-weight:900}
+.callout b{font-weight:800}
+
+/* ---------- Risk ---------- */
+.parents{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px}
+.pbox{border:1px solid var(--line);border-radius:16px;padding:14px;background:var(--lav-3)}
+.pbox h4{font-size:13px;font-weight:800;color:var(--purple);margin-bottom:10px}
+.pbox .choices{display:flex;flex-wrap:wrap;gap:6px}
+.pbox .choice{border:1.5px solid var(--line-2);background:#fff;border-radius:10px;padding:7px 10px;font-size:13px;color:var(--ink);text-align:left;line-height:1.2}
+.pbox .choice b{font-family:var(--serif);font-size:15px;display:block;color:var(--navy)}
+.pbox .choice small{font-size:11px;color:var(--muted)}
+.pbox .choice.on{border-color:var(--purple);background:var(--purple);color:#fff}
+.pbox .choice.on b,.pbox .choice.on small{color:#fff}
+.riskgrid{display:grid;grid-template-columns:auto 1fr;gap:24px;align-items:start}
+table.pun{border-collapse:separate;border-spacing:6px}
+.pun td{width:118px;height:84px;border-radius:12px;text-align:center;vertical-align:middle;padding:6px}
+.pun .corner{background:transparent;width:70px;font-size:10px;color:var(--muted);line-height:1.25}
+.pun .hd{background:var(--navy);color:#fff;font-family:var(--serif);font-weight:800;font-size:18px;height:46px}
+.pun .hd small{display:block;font-family:var(--sans);font-size:9.5px;font-weight:500;opacity:.7}
+.pun .cell .g{font-family:var(--serif);font-weight:800;font-size:17px}
+.pun .cell .l{font-size:10.5px;font-weight:700;margin-top:3px;line-height:1.2}
+.pcap{font-size:11.5px;color:var(--muted);text-align:center;margin-top:2px}
+.headline{border-radius:16px;padding:18px 20px;background:var(--navy);color:#fff;margin-bottom:12px}
+.headline .k{font-size:12px;color:#CFC3E3;font-weight:600}
+.headline .v{font-weight:900;font-size:44px;letter-spacing:-.03em;line-height:1.05;margin:2px 0}
+.headline .s{font-size:12.5px;color:#BDB6CC}
+.dist{display:grid;gap:8px;margin-bottom:12px}
+.dist .it{display:grid;grid-template-columns:1fr auto;align-items:center;gap:10px;padding:10px 12px;border-radius:12px}
+.dist .it .nm{font-size:13.5px;font-weight:700}
+.dist .it .nm small{display:block;font-weight:500;font-size:11.5px;opacity:.85}
+.dist .it .pc{font-weight:900;font-size:20px}
+.opts-list{border-left:4px solid var(--orange);background:#fff;border-radius:0 14px 14px 0;padding:14px 16px;margin-top:12px;border-top:1px solid var(--line);border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+.opts-list h5{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--orange);margin-bottom:8px}
+.opts-list ul{list-style:none;display:grid;gap:5px}
+.opts-list li{font-size:13.5px;padding-left:18px;position:relative}
+.opts-list li::before{content:"→";position:absolute;left:0;color:var(--purple-2);font-weight:800}
+
+/* ---------- Footer blocks ---------- */
+.refs{margin:34px 0 0;border-radius:22px;background:var(--purple);color:#fff;padding:30px 28px;position:relative;overflow:hidden}
+.refs::after{content:"";position:absolute;right:-80px;top:-80px;width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,rgba(180,155,202,.35),transparent 70%)}
+.refs h3{font-weight:900;font-size:30px;letter-spacing:-.03em}
+.refs .sub{color:var(--amber);font-size:17px;margin-bottom:18px}
+.refs ol{list-style:none;counter-reset:r;display:grid;gap:10px;position:relative;z-index:1}
+.refs li{counter-increment:r;display:flex;gap:12px;padding:12px 14px;border-radius:14px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);font-size:13px;line-height:1.5}
+.refs li::before{content:counter(r);flex-shrink:0;width:24px;height:24px;border-radius:50%;background:var(--lav);color:var(--purple);font-weight:800;display:flex;align-items:center;justify-content:center;font-size:12px}
+.disc{margin-top:16px;display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:14px;border:1px solid rgba(255,255,255,.14);color:var(--amber);font-size:13px;position:relative;z-index:1}
+.limits{margin-top:14px;font-size:12.5px;color:#D7CCE6;position:relative;z-index:1}
+footer{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;padding:22px 0 34px}
+.strip{display:flex;height:10px;width:230px;border-radius:6px;overflow:hidden}
+.strip i{flex:1}
+footer .by{font-size:12px;color:var(--muted);letter-spacing:.06em}
+footer .by a{color:var(--purple-2);text-decoration:none;font-weight:600}
+
+@media (max-width:900px){
+  .grid2,.riskgrid{grid-template-columns:1fr}
+  .pun td{width:auto;min-width:88px}
+}
+@media (max-width:640px){
+  .wrap{padding:0 16px}
+  .top{flex-direction:column}.collab{text-align:left}
+  .tabs{grid-template-columns:1fr}
+  .card{padding:18px}
+  .parents{grid-template-columns:1fr}
+  .geno{font-size:32px}
+  .pun td{min-width:0;height:74px;padding:4px}.pun .corner{width:44px}
+  .pun .cell .g{font-size:14px}.pun .hd{font-size:15px}
+  .chrom{flex-direction:column;align-items:stretch}.chrom .cid{width:auto}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div class="brand">
+      <div class="nasl">NASL</div>
+      <div class="kick">Genetics · Blood · Health</div>
+    </div>
+    <div class="collab">In collaboration with<br><a href="https://instagram.com/genomikmente" target="_blank" rel="noopener">@genomikmente</a></div>
+  </header>
+
+  <section class="hero">
+    <div class="eyebrow">Thalassemia toolkit · interactive</div>
+    <h1>From genotype<br>to <span>clinical spectrum.</span></h1>
+    <div class="rule"></div>
+    <p class="lead">Two educational tools for professionals and students. Explore how the <b>number, type and arrangement</b> of affected globin alleles shape the phenotype, and how thalassemia alleles are <b>transmitted between generations</b>.</p>
+  </section>
+
+  <nav class="tabs" role="tablist" aria-label="Tools">
+    <button class="tab on" role="tab" data-tab="explorer" aria-selected="true"><span class="n">1</span><span><strong>Genotype–Phenotype Explorer</strong><small>α- and β-thalassemia, allele by allele</small></span></button>
+    <button class="tab" role="tab" data-tab="risk" aria-selected="false"><span class="n">2</span><span><strong>Reproductive Risk Calculator</strong><small>Carrier couples, Punnett squares, outcomes</small></span></button>
+  </nav>
+
+  <!-- ================= TOOL 1 ================= -->
+  <section class="panel on" id="explorer" role="tabpanel">
+    <div class="card">
+      <div class="seg" id="exSeg">
+        <button class="on" data-g="alpha"><span class="g">α</span>Alpha-thalassemia</button>
+        <button data-g="beta"><span class="g">β</span>Beta-thalassemia</button>
+      </div>
+
+      <!-- alpha -->
+      <div id="exAlpha" class="grid2">
+        <div>
+          <div class="label">Chromosome 16 · 16p13.3 — tap a gene to delete / restore it</div>
+          <div class="chrom"><div class="cid"><b>Chr 16</b>copy 1</div>
+            <div class="bar"><button class="gene" data-c="0" data-i="0">HBA2<small>α2-globin</small></button><button class="gene" data-c="0" data-i="1">HBA1<small>α1-globin</small></button></div></div>
+          <div class="chrom"><div class="cid"><b>Chr 16</b>copy 2</div>
+            <div class="bar"><button class="gene" data-c="1" data-i="0">HBA2<small>α2-globin</small></button><button class="gene" data-c="1" data-i="1">HBA1<small>α1-globin</small></button></div></div>
+          <div class="label" style="margin-top:18px">Or choose a genotype</div>
+          <div class="presets" id="aPresets"></div>
+          <p class="hint">Simplified deletional genotypes shown; non-deletional variants (e.g. αᵀα, such as Hb Constant Spring) can modify the phenotype and are not modelled here.</p>
+        </div>
+        <div class="result" id="aResult" aria-live="polite"></div>
+      </div>
+
+      <!-- beta -->
+      <div id="exBeta" class="grid2" hidden>
+        <div>
+          <div class="label">HBB · chromosome 11 (11p15.4) — choose each allele</div>
+          <div class="allele" data-k="0"><div class="head"><span>HBB allele 1</span><b>Chr 11 · copy 1</b></div><div class="opts3"></div></div>
+          <div class="allele" data-k="1"><div class="head"><span>HBB allele 2</span><b>Chr 11 · copy 2</b></div><div class="opts3"></div></div>
+          <p class="hint"><b>β⁺</b>: reduced β-globin production · <b>β⁰</b>: absent β-globin production. The residual output of each β⁺ allele varies widely, which is why several genotypes span a range of severity.</p>
+        </div>
+        <div class="result" id="bResult" aria-live="polite"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= TOOL 2 ================= -->
+  <section class="panel" id="risk" role="tabpanel">
+    <div class="card">
+      <div class="seg" id="rkSeg">
+        <button class="on" data-g="alpha"><span class="g">α</span>Alpha-thalassemia</button>
+        <button data-g="beta"><span class="g">β</span>Beta-thalassemia</button>
+      </div>
+      <div class="parents" id="rkParents"></div>
+      <div class="riskgrid">
+        <div>
+          <div class="label">Punnett square · each cell = 25% per pregnancy</div>
+          <table class="pun" id="rkPun"></table>
+          <p class="pcap" id="rkCap"></p>
+        </div>
+        <div id="rkOut" aria-live="polite"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= References ================= -->
+  <section class="refs">
+    <h3>References</h3>
+    <p class="sub">Science behind these tools</p>
+    <ol>
+      <li>Langer AL. Beta-Thalassemia. GeneReviews®. University of Washington, Seattle; updated February 12, 2026.</li>
+      <li>Tamary H, Greenberg-Kushnir N, Dgany O. Alpha-Thalassemia. GeneReviews®. University of Washington, Seattle; updated April 23, 2026.</li>
+      <li>Mensah C, Sheth S. Optimal strategies for carrier screening and prenatal diagnosis of α- and β-thalassemia. Hematology Am Soc Hematol Educ Program. 2021;2021(1):607–613. doi:10.1182/hematology.2021000296.</li>
+      <li>Amid A, Lal A, Coates TD, Fucharoen S, editors. Guidelines for the Management of α-Thalassaemia. Nicosia, Cyprus: Thalassaemia International Federation; 2023.</li>
+      <li>Thein SL. Pathophysiology of β Thalassemia—A Guide to Molecular Therapies. Hematology Am Soc Hematol Educ Program. 2005;2005(1):31–37. doi:10.1182/asheducation-2005.1.31.</li>
+    </ol>
+    <p class="limits"><b>Model limits:</b> classical Mendelian inheritance of simplified deletional α-genotypes and β⁺/β⁰ alleles. Not modelled: non-deletional α variants, α-globin triplications, co-inheritance of α- and β-thalassemia, structural variants (HbE, HbS, HbC), HbF-modifying loci, de novo events or uniparental disomy.</p>
+    <div class="disc"><span aria-hidden="true">💡</span><span>This tool is for educational purposes only and does not replace professional medical advice, laboratory diagnosis or genetic counselling. For personal or clinical decisions, please consult a qualified healthcare provider.</span></div>
+  </section>
+
+  <footer>
+    <div class="strip" aria-hidden="true"><i style="background:#B49BCA"></i><i style="background:#350A5B"></i><i style="background:#282942"></i><i style="background:#CABEB1"></i><i style="background:#F5632A"></i><i style="background:#FBB63E"></i></div>
+    <div class="by">NASL · Science for a healthier tomorrow · in collaboration with <a href="https://instagram.com/genomikmente" target="_blank" rel="noopener">@genomikmente</a> (Lidia Segura)</div>
+  </footer>
+</div>
+
+<script>
+/* ===================== DATA ===================== */
+/* Alpha haplotypes: number of functional α genes on one chromosome 16 */
+const HAP = { "αα":2, "−α":1, "−−":0 };
+function hapFromGenes(g){ const n=g[0]+g[1]; return n===2?"αα":(n===1?"−α":"−−"); }
+function aGenotypeName(h1,h2){ // order: fewer genes first, as conventionally written (--/αα)
+  const s=[h1,h2].sort((a,b)=>HAP[a]-HAP[b]); return s[0]+"/"+s[1]; }
+
+const ALPHA = {
+  4:{ cls:"s0", name:"Normal", desc:"Four functional α-globin genes. Balanced α- and non-α-globin chain synthesis.",
+      facts:["Normal red-cell indices","No excess of unpaired globin chains"] },
+  3:{ cls:"s1", name:"Silent carrier", desc:"Three functional α-globin alleles; usually asymptomatic.",
+      facts:["Normal or borderline-low MCV/MCH","Usually not detectable by CBC or Hb analysis — requires DNA testing (e.g. gap-PCR, MLPA)"] },
+  2:{ cls:"s2", name:"Alpha-thalassemia trait (minor)", desc:"Two functional α-globin alleles; mild microcytosis with or without anemia.",
+      facts:["Microcytosis and hypochromia, normal or slightly low Hb","HbA2 normal or low — distinguishes it from β-thalassemia trait","Confirmation requires molecular testing"] },
+  1:{ cls:"s3", name:"Hemoglobin H disease", desc:"One functional α-globin allele. Mild-to-moderate hemolytic anemia; severity is variable.",
+      facts:["Excess β-chains form HbH (β₄), which precipitates in red cells","Hepatosplenomegaly, jaundice and gallstones may occur","Usually non-transfusion-dependent (NTDT); transfusions may be needed during infections, pregnancy or with non-deletional variants"] },
+  0:{ cls:"s4", name:"Hb Bart's hydrops fetalis", desc:"No functional α-globin alleles. Severe fetal anemia and hydrops; usually fatal without treatment.",
+      facts:["Excess γ-chains form Hb Bart's (γ₄), unable to deliver oxygen","Also carries serious maternal risks (e.g. pre-eclampsia, obstetric complications)","In-utero transfusion can allow survival, with lifelong transfusion dependence"] }
+};
+
+/* Beta alleles */
+const BAL = [ {k:"N",sym:"β",lab:"normal"}, {k:"+",sym:"β⁺",lab:"reduced"}, {k:"0",sym:"β⁰",lab:"absent"} ];
+const bSym = k => k==="N"?"β":(k==="+"?"β⁺":"β⁰");
+function bName(a,b){ if(a==="N"&&b==="N") return "β/β"; if(a==="N"||b==="N") return bSym(a==="N"?b:a)+"/β"; const s=[a,b].sort((x,y)=>(x==="+"?0:1)-(y==="+"?0:1)); return bSym(s[0])+"/"+bSym(s[1]); }
+function bKey(a,b){ const o={"N":0,"+":1,"0":2}; return [a,b].sort((x,y)=>o[x]-o[y]).join(""); }
+const BETA = {
+  "NN":{ cls:"s0", name:"Unaffected", range:[0,0], desc:"Two functional β-globin alleles; normal β-globin production.",
+         facts:["Normal red-cell indices and HbA2"] },
+  "N+":{ cls:"s2", name:"Beta-thalassemia trait (minor)", range:[1,1], desc:"Reduced β-globin production from one allele. Usually asymptomatic, or mild microcytosis ± mild anemia.",
+         facts:["Microcytosis and hypochromia","Raised HbA2 (typically > 3.5%) is the key screening marker","Iron deficiency can lower HbA2 and mask the trait"] },
+  "N0":{ cls:"s2", name:"Beta-thalassemia trait (minor)", range:[1,1], desc:"Absent β-globin production from one allele. Usually asymptomatic, or mild microcytosis ± mild anemia.",
+         facts:["Microcytosis and hypochromia","Raised HbA2 (typically > 3.5%) is the key screening marker","Iron deficiency can lower HbA2 and mask the trait"] },
+  "++":{ cls:"s3", name:"Variable", range:[1,2], desc:"Reduced β-globin production from both alleles. May range from β-thalassemia minor to intermedia, depending on the residual output of each β⁺ allele.",
+         facts:["Mild β⁺ alleles (β⁺⁺) can give a very mild phenotype","Most often non-transfusion-dependent (NTDT)","Genetic modifiers can shift the phenotype"] },
+  "+0":{ cls:"s3", name:"Variable", range:[2,3], desc:"Reduced production from one allele and absent from the other. May range from intermedia to major.",
+         facts:["Phenotype depends largely on the β⁺ allele","Can be NTDT or transfusion-dependent (TDT)","Genetic modifiers can shift the phenotype"] },
+  "00":{ cls:"s4", name:"Beta-thalassemia major", range:[3,3], desc:"No β-globin production from either allele. Severe anemia; typically transfusion-dependent (TDT) from early childhood.",
+         facts:["Symptoms usually begin in the first 2 years of life, as HbF declines","Regular transfusions and iron chelation; HSCT and gene therapy are potentially curative options","Genetic modifiers can shift the phenotype"] }
+};
+const SPEC = ["Unaffected","Trait (minor)","Intermedia (NTDT)","Major (TDT)"];
+
+/* ===================== TABS ===================== */
+const tabs=[...document.querySelectorAll(".tab")];
+function showTab(id){
+  tabs.forEach(t=>{const on=t.dataset.tab===id; t.classList.toggle("on",on); t.setAttribute("aria-selected",on);});
+  document.querySelectorAll(".panel").forEach(p=>p.classList.toggle("on",p.id===id));
+  try{history.replaceState(null,"","#"+id);}catch(e){}
+}
+tabs.forEach(t=>t.addEventListener("click",()=>showTab(t.dataset.tab)));
+if(location.hash==="#risk") showTab("risk");
+
+/* ===================== EXPLORER · ALPHA ===================== */
+const aGenes=[[1,1],[1,1]];
+const PRESETS=[["αα","αα"],["−α","αα"],["−−","αα"],["−α","−α"],["−−","−α"],["−−","−−"]];
+const presetBox=document.getElementById("aPresets");
+PRESETS.forEach(p=>{const b=document.createElement("button"); b.className="preset"; b.textContent=aGenotypeName(p[0],p[1]);
+  b.dataset.h=p.join("|"); b.onclick=()=>{ setHap(0,p[1]); setHap(1,p[0]); renderAlpha(); }; presetBox.appendChild(b);});
+function setHap(c,h){ aGenes[c] = h==="αα"?[1,1]:(h==="−α"?[0,1]:[0,0]); }
+document.querySelectorAll(".gene").forEach(g=>g.addEventListener("click",()=>{ const c=+g.dataset.c,i=+g.dataset.i; aGenes[c][i]=aGenes[c][i]?0:1; renderAlpha(); }));
+
+function beads(n,total,cls,excess){ let s=""; for(let i=0;i<total;i++) s+='<span class="bead '+(i<n?cls:"x")+'"></span>'; for(let i=0;i<(excess||0);i++) s+='<span class="bead ex"></span>'; return s; }
+
+function renderAlpha(){
+  document.querySelectorAll(".gene").forEach(g=>g.classList.toggle("off",!aGenes[+g.dataset.c][+g.dataset.i]));
+  const h1=hapFromGenes(aGenes[0]), h2=hapFromGenes(aGenes[1]);
+  const n=HAP[h1]+HAP[h2], name=aGenotypeName(h1,h2), d=ALPHA[n];
+  presetBox.querySelectorAll(".preset").forEach(b=>{const p=b.dataset.h.split("|"); b.classList.toggle("on",aGenotypeName(p[0],p[1])===name);});
+  let arr="";
+  if(n===2){
+    arr = (h1==="−−"||h2==="−−")
+      ? '<div class="callout warn"><span class="ic">!</span><div><b>Cis deletion (−−/αα).</b> Both deleted genes are on the same chromosome, so this person can transmit a <b>−−</b> haplotype. If the partner also carries −−, each pregnancy has a 25% risk of Hb Bart\'s hydrops fetalis.</div></div>'
+      : '<div class="callout"><span class="ic">i</span><div><b>Trans deletion (−α/−α).</b> One gene is missing on each chromosome, so only <b>−α</b> haplotypes can be transmitted: no risk of Hb Bart\'s hydrops from this parent, although HbH disease is possible with a −− partner.</div></div>';
+  }
+  if(n===3) arr='<div class="callout"><span class="ic">i</span><div>A silent carrier can transmit a −α haplotype. With a −− partner, each pregnancy has a 25% risk of HbH disease.</div></div>';
+  const excessNote = ["γ₄ (Hb Bart's)","β₄ (HbH)","mild excess","minimal","none"][n];
+  document.getElementById("aResult").innerHTML =
+    '<div class="label">Genotype</div><div class="geno">'+name+'</div>'+
+    '<span class="pheno '+d.cls+'">'+d.name+'</span>'+
+    '<p class="desc">'+d.desc+'</p>'+
+    '<div class="meter"><div class="row"><span>α-globin genes</span><span class="beads">'+beads(n,4,"")+'</span><span>'+n+'/4</span></div>'+
+    '<div class="row"><span>Unpaired chains</span><span class="beads">'+beads(0,0,"",4-n)+'</span><span>'+excessNote+'</span></div></div>'+
+    '<ul class="facts">'+d.facts.map(f=>"<li>"+f+"</li>").join("")+'</ul>'+arr;
+}
+
+/* ===================== EXPLORER · BETA ===================== */
+const bAl=["N","N"];
+document.querySelectorAll(".allele").forEach(box=>{
+  const k=+box.dataset.k, wrap=box.querySelector(".opts3");
+  BAL.forEach(a=>{const b=document.createElement("button"); b.className="opt"; b.dataset.v=a.k;
+    b.innerHTML='<span class="sym">'+a.sym+'</span><small>'+a.lab+'</small>'; b.onclick=()=>{bAl[k]=a.k; renderBeta();}; wrap.appendChild(b);});
+});
+function renderBeta(){
+  document.querySelectorAll(".allele").forEach(box=>box.querySelectorAll(".opt").forEach(b=>b.classList.toggle("on",b.dataset.v===bAl[+box.dataset.k])));
+  const key=bKey(bAl[0],bAl[1]), d=BETA[key], o={"N":0,"+":1,"0":2};
+  const s=[bAl[0],bAl[1]].sort((x,y)=>o[x]-o[y]); const name=bName(bAl[0],bAl[1]);
+  let segs="",labs=""; for(let i=0;i<4;i++){ segs+='<div class="seg4'+(i>=d.range[0]&&i<=d.range[1]?" hl":"")+'"></div>'; labs+="<div>"+SPEC[i]+"</div>"; }
+  const betaOut = 2 - (s[0]==="N"?0:(s[0]==="+"?0.5:1)) - (s[1]==="N"?0:(s[1]==="+"?0.5:1));
+  const nb = Math.round(betaOut*2);
+  document.getElementById("bResult").innerHTML =
+    '<div class="label">Genotype</div><div class="geno">'+name+'</div>'+
+    '<span class="pheno '+d.cls+'">'+d.name+'</span>'+
+    '<p class="desc">'+d.desc+'</p>'+
+    '<div class="spectrum"><div class="label" style="margin-bottom:8px">Clinical spectrum</div><div class="track">'+segs+'</div><div class="labs">'+labs+'</div></div>'+
+    '<div class="meter"><div class="row"><span>α-chains</span><span class="beads">'+beads(4,4,"")+'</span></div>'+
+    '<div class="row"><span>β-chains</span><span class="beads">'+beads(nb,4,"b")+'</span><span>'+(key==="NN"?"balanced":(nb===0?"absent":"reduced"))+'</span></div></div>'+
+    '<ul class="facts">'+d.facts.map(f=>"<li>"+f+"</li>").join("")+'</ul>'+
+    (key!=="NN"&&key!=="N+"&&key!=="N0" ? '<div class="callout"><span class="ic">i</span><div><b>Genetic modifiers.</b> Co-inherited α-thalassemia can ameliorate the phenotype, α-globin gene triplication can worsen it, and variants that raise HbF (e.g. <i>BCL11A</i>, <i>HBS1L-MYB</i>, <i>XmnI-HBG2</i>) can reduce severity.</div></div>' : '')+
+    '<p class="hint">Illustrative chain balance: each β⁺ allele is drawn as half output; real residual output varies by variant.</p>';
+}
+
+/* ===================== RISK CALCULATOR ===================== */
+let rkGene="alpha";
+const A_PARENTS=[["αα","αα","Non-carrier"],["−α","αα","Silent carrier"],["−−","αα","Trait · cis"],["−α","−α","Trait · trans"],["−−","−α","HbH disease"]];
+const B_PARENTS=[["N","N","Unaffected"],["+","N","Trait (β⁺)"],["0","N","Trait (β⁰)"],["+","+","β⁺/β⁺"],["+","0","β⁺/β⁰"],["0","0","β⁰/β⁰"]];
+const rk={ alpha:[2,2], beta:[2,1] };
+
+function rkRender(){
+  const list = rkGene==="alpha"?A_PARENTS:B_PARENTS;
+  const box=document.getElementById("rkParents");
+  box.innerHTML=[0,1].map(p=>'<div class="pbox"><h4>Parent '+(p+1)+'</h4><div class="choices">'+
+    list.map((g,i)=>'<button class="choice'+(rk[rkGene][p]===i?" on":"")+'" data-p="'+p+'" data-i="'+i+'"><b>'+
+      (rkGene==="alpha"?aGenotypeName(g[0],g[1]):bName(g[0],g[1]))+'</b><small>'+g[2]+'</small></button>').join("")+'</div></div>').join("");
+  box.querySelectorAll(".choice").forEach(b=>b.onclick=()=>{ rk[rkGene][+b.dataset.p]=+b.dataset.i; rkRender(); });
+
+  const P1=list[rk[rkGene][0]], P2=list[rk[rkGene][1]];
+  const g1=[P1[0],P1[1]], g2=[P2[0],P2[1]];
+  const cells=[]; const tally={};
+  let html='<tr><td class="corner">Parent 2 ↓<br>Parent 1 →</td>'+g1.map(h=>'<td class="hd">'+(rkGene==="alpha"?h:bSym(h))+'<small>'+(rkGene==="alpha"?"haplotype":"allele")+'</small></td>').join("")+'</tr>';
+  g2.forEach(r=>{
+    html+='<tr><td class="hd">'+(rkGene==="alpha"?r:bSym(r))+'<small>'+(rkGene==="alpha"?"haplotype":"allele")+'</small></td>';
+    g1.forEach(c=>{
+      let gname,d,group;
+      if(rkGene==="alpha"){ const n=HAP[c]+HAP[r]; d=ALPHA[n]; gname=aGenotypeName(c,r); group=n; }
+      else { const k=bKey(c,r); d=BETA[k]; gname=bName(c,r);
+             group = k==="NN"?"u":((k==="N+"||k==="N0")?"c":"a"); }
+      html+='<td class="cell '+d.cls+'"><div class="g">'+gname+'</div><div class="l">'+(rkGene==="beta"&&group==="a"?(k2label(gname)):d.name)+'</div></td>';
+      tally[group]=(tally[group]||0)+25;
+    });
+    html+='</tr>';
+  });
+  document.getElementById("rkPun").innerHTML=html;
+  document.getElementById("rkCap").textContent="Probabilities apply independently to every pregnancy.";
+
+  let out="", items=[], severe=0, severeLabel="";
+  if(rkGene==="alpha"){
+    [4,3,2,1,0].forEach(n=>{ if(tally[n]) items.push([ALPHA[n].cls, ALPHA[n].name, n+" functional α-gene"+(n===1?"":"s"), tally[n]]); });
+    severe=(tally[0]||0); severeLabel="Risk of Hb Bart's hydrops fetalis per pregnancy";
+    if(!severe){ severe=(tally[1]||0); severeLabel="Risk of HbH disease per pregnancy"; }
+  } else {
+    if(tally.u) items.push(["s0","Unaffected","β/β",tally.u]);
+    if(tally.c) items.push(["s2","Carrier (trait)","β⁺/β or β⁰/β",tally.c]);
+    if(tally.a) items.push(["s4","Beta-thalassemia (biallelic)","severity depends on the allele combination",tally.a]);
+    severe=tally.a||0; severeLabel="Risk of a child with biallelic β-thalassemia per pregnancy";
+  }
+  out+='<div class="headline"><div class="k">'+severeLabel+'</div><div class="v" style="color:'+(severe? "#FBB63E":"#CFE8C9")+'">'+severe+'%</div><div class="s">in each pregnancy, independently</div></div>';
+  out+='<div class="dist">'+items.map(it=>'<div class="it '+it[0]+'"><div class="nm">'+it[1]+'<small>'+it[2]+'</small></div><div class="pc">'+it[3]+'%</div></div>').join("")+'</div>';
+
+  /* contextual notes */
+  if(rkGene==="alpha"){
+    const cis = h=>h[0]==="−−"||h[1]==="−−";
+    if(cis(g1)&&cis(g2)) out+='<div class="callout warn"><span class="ic">!</span><div><b>Both parents carry a −− haplotype.</b> This is the couple at risk of Hb Bart\'s hydrops fetalis. The pregnancy also carries maternal risks and warrants early specialist referral.</div></div>';
+    else if(g1.includes("−α")&&g2.includes("−α")&&!cis(g1)&&!cis(g2)) out+='<div class="callout"><span class="ic">i</span><div>Only −α haplotypes are transmitted by these parents, so no child can inherit −−: <b>no risk of Hb Bart\'s hydrops or HbH disease</b> from this combination.</div></div>';
+    out+='<div class="callout"><span class="ic">i</span><div><b>Cis vs trans matters.</b> −−/αα and −α/−α have identical red-cell indices but very different reproductive risks. α-carrier status and arrangement require DNA analysis (e.g. gap-PCR, MLPA); a CBC alone cannot resolve them.</div></div>';
+  } else {
+    out+='<div class="callout"><span class="ic">i</span><div><b>Carrier screening.</b> β-thalassemia carriers are usually identified by microcytosis with raised HbA2. Iron deficiency and co-inherited α-thalassemia can mask the trait; molecular testing defines the exact β⁺/β⁰ alleles.</div></div>';
+  }
+  if(severe>0) out+='<div class="opts-list"><h5>Reproductive options to discuss</h5><ul>'+
+    '<li>Genetic counselling for the couple</li><li>Preimplantation genetic testing (PGT-M) with IVF</li>'+
+    '<li>Prenatal diagnosis: chorionic villus sampling or amniocentesis</li><li>Gamete donation</li><li>Natural conception with informed follow-up</li></ul></div>';
+  document.getElementById("rkOut").innerHTML=out;
+}
+function k2label(g){ const m={"β⁺/β⁺":"Variable · minor–intermedia","β⁺/β⁰":"Variable · intermedia–major","β⁰/β⁰":"β-thalassemia major"}; return m[g]||"Variable"; }
+
+/* segmented controls */
+function wireSeg(id,cb){ const seg=document.getElementById(id); seg.addEventListener("click",e=>{const b=e.target.closest("button"); if(!b) return;
+  seg.querySelectorAll("button").forEach(x=>x.classList.toggle("on",x===b)); cb(b.dataset.g); }); }
+wireSeg("exSeg",g=>{ document.getElementById("exAlpha").hidden=g!=="alpha"; document.getElementById("exBeta").hidden=g!=="beta"; });
+wireSeg("rkSeg",g=>{ rkGene=g; rkRender(); });
+
+renderAlpha(); renderBeta(); rkRender();
+</script>
+</body>
+</html>
