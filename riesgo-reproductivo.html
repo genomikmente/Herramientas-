@@ -121,7 +121,7 @@
     <div class="gridcap" id="gridcap"></div>
     <div id="results"></div>
     <div class="disclaimer">
-      <b>Herramienta educativa.</b> Basada en herencia mendeliana clásica; no considera penetrancia incompleta, expresividad variable, mosaicismo, mutaciones <i>de novo</i> ni inactivación sesgada del X. No sustituye la consejería genética profesional.
+      <b>Herramienta educativa.</b> Basada en herencia mendeliana clásica; no considera penetrancia incompleta, expresividad variable, mosaicismo, variantes <i>de novo</i> ni inactivación sesgada del X. No sustituye la consejería genética profesional.
     </div>
   </div>
 
@@ -140,7 +140,7 @@ const AR_LABEL={ no:'No portador/a', port:'Portador/a', af:'Afectado/a' };
 const XM_GENO={ no:['A','A'], port:['A','a'], af:['a','a'] };
 const XM_LABEL={ no:'No portadora', port:'Portadora', af:'Afectada' };
 const XF_ALLELE={ sano:'A', af:'a' };
-const XF_LABEL={ sano:'Sano', af:'Afectado' };
+const XF_LABEL={ sano:'No afectado', af:'Afectado' };
 
 const pct = x => Math.round(x*100);
 
@@ -169,8 +169,8 @@ function calcXLR(){
   return {m,fx,agg,cells,hija,hijo};
 }
 
-const CLS_LAB={af:'Afectado', port:'Portador', sano:'Sano'};
-const CLS_LAB_F={af:'Afectada', port:'Portadora', sano:'Sana'};
+const CLS_LAB={af:'Afectado', port:'Portador', sano:'No portador'};
+const CLS_LAB_F={af:'Afectada', port:'Portadora', sano:'No portadora'};
 
 function renderInputs(){
   const box=document.getElementById('inputs');
@@ -219,7 +219,7 @@ function renderPunnett(data){
     // sons row (Y)
     html += '<tr><td class="hd">Y</td>';
     for(const col of cols){ const aff=col==='a'; const cls=aff?'af':'sano';
-      html += '<td class="cell o-'+cls+'"><div class="g">X<sup>'+col+'</sup>Y</div><div class="lab">'+CLS_LAB[cls]+'</div><div class="sx">♂ hijo</div></td>'; }
+      html += '<td class="cell o-'+cls+'"><div class="g">X<sup>'+col+'</sup>Y</div><div class="lab">'+(aff?'Afectado':'No afectado')+'</div><div class="sx">♂ hijo</div></td>'; }
     html += '</tr>';
   }
   t.innerHTML=html;
@@ -235,8 +235,8 @@ function renderResults(data){
     '<div class="rs">en cada gestación, de forma independiente</div></div>';
   html += '<div class="cards3">'+
     '<div class="rc af"><div class="rcv">'+af+'%</div><div class="rcl">Afectado</div></div>'+
-    '<div class="rc port"><div class="rcv">'+port+'%</div><div class="rcl">Portador</div></div>'+
-    '<div class="rc sano"><div class="rcv">'+sano+'%</div><div class="rcl">Sano</div></div></div>';
+    '<div class="rc port"><div class="rcv">'+port+'%</div><div class="rcl">'+(mode==='xlr'?'Portadora':'Portador')+'</div></div>'+
+    '<div class="rc sano"><div class="rcv">'+sano+'%</div><div class="rcl">'+(mode==='xlr'?'No afectado/<br>no portadora':'No portador')+'</div></div></div>';
 
   if(mode==='xlr'){
     const hj=data.hija, ho=data.hijo;
@@ -246,11 +246,11 @@ function renderResults(data){
       '<div class="sexcol"><div class="sh"><span class="sym">♀</span>Hijas</div>'+
         sexRow('Afectada', wf(hj.af), 'af')+
         sexRow('Portadora', wf(hj.port), 'port')+
-        sexRow('Sana', wf(hj.sano), 'sano')+
+        sexRow('No portadora', wf(hj.sano), 'sano')+
       '</div>'+
       '<div class="sexcol"><div class="sh"><span class="sym">♂</span>Hijos</div>'+
         sexRow('Afectado', wm(ho.af), 'af')+
-        sexRow('Sano', wm(ho.sano), 'sano')+
+        sexRow('No afectado', wm(ho.sano), 'sano')+
       '</div></div>';
   }
 
