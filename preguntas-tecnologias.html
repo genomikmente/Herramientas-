@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>¿Qué pregunta responde cada tecnología? · GenomiKmente</title>
+<meta name="description" content="Herramienta educativa: WES, WGS, long-read, RNA-seq y episignaturas. Qué pregunta responde cada tecnología, cómo funciona y qué detecta.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#0D1B2A; --coral:#E8604A; --cream:#FAF8F5;
+  --coral-soft:#FBE7E1; --coral-tint:#FDF3EF;
+  --ink:#0D1B2A; --muted:#4A5563; --line:#E6DFD8; --card:#FFFFFF;
+  --radius:16px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--cream);color:var(--ink);font-family:'DM Sans',system-ui,sans-serif;font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased}
+a{color:var(--coral)}
+.wrap{max-width:1040px;margin:0 auto;padding:0 20px}
+
+/* Header */
+.brand{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:18px 0;border-bottom:1px solid var(--line);font-size:14px}
+.brand b{font-family:'Playfair Display',serif;font-size:19px;letter-spacing:.2px}
+.brand b span{color:var(--coral)}
+.brand small{color:var(--muted)}
+.hero{padding:40px 0 28px}
+.eyebrow{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--coral);font-weight:700}
+h1{font-family:'Playfair Display',serif;font-size:clamp(30px,5vw,46px);line-height:1.12;margin:10px 0 14px;max-width:760px}
+.lead{font-size:18px;color:var(--muted);max-width:680px}
+.lead strong{color:var(--ink)}
+.note{margin-top:18px;display:inline-flex;gap:10px;align-items:flex-start;background:var(--coral-tint);border:1px solid var(--coral-soft);border-radius:12px;padding:10px 14px;font-size:14px;color:var(--muted);max-width:680px}
+.note b{color:var(--ink)}
+
+/* Tabs */
+.tabs{position:sticky;top:0;z-index:5;background:var(--cream);padding:12px 0;border-bottom:1px solid var(--line)}
+.tablist{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.tablist::-webkit-scrollbar{display:none}
+.tab{flex:0 0 auto;border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit;font-size:14px;font-weight:500;border-radius:999px;padding:8px 14px;cursor:pointer;display:flex;gap:8px;align-items:center;transition:background .15s,border-color .15s}
+.tab .n{font-family:'Playfair Display',serif;color:var(--coral);font-weight:700}
+.tab:hover{border-color:var(--coral)}
+.tab[aria-selected="true"]{background:var(--navy);color:#fff;border-color:var(--navy)}
+.tab[aria-selected="true"] .n{color:var(--coral)}
+.tab.alt{background:transparent}
+.tab.alt[aria-selected="true"]{background:var(--coral);border-color:var(--coral);color:#fff}
+
+/* Panels */
+main{padding:28px 0 56px}
+.panel[hidden]{display:none}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:28px}
+.head{display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:center;padding-bottom:20px;border-bottom:1px solid var(--line)}
+.big{font-family:'Playfair Display',serif;font-size:64px;line-height:1;color:var(--coral);font-weight:600;padding-right:18px;border-right:2px solid var(--coral-soft)}
+.head h2{font-family:'Playfair Display',serif;font-size:clamp(26px,4vw,36px);line-height:1.1}
+.head .full{font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--coral);font-weight:700;margin-top:4px}
+.question{font-family:'Playfair Display',serif;font-size:clamp(22px,3.4vw,30px);line-height:1.2;margin:22px 0 6px}
+.question-sub{color:var(--muted);margin-bottom:24px}
+
+.grid2{display:grid;grid-template-columns:1.15fr .85fr;gap:22px}
+.block{min-width:0}
+.block h3{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:12px}
+.steps{list-style:none;counter-reset:s;display:grid;gap:10px}
+.steps li{counter-increment:s;display:grid;grid-template-columns:30px 1fr;gap:12px;align-items:start;overflow-wrap:break-word}
+.steps li::before{content:counter(s);width:30px;height:30px;border-radius:50%;background:var(--coral-tint);border:1px solid var(--coral-soft);color:var(--coral);font-weight:700;font-size:14px;display:grid;place-items:center}
+.platforms{margin-top:14px;display:grid;gap:10px}
+.platform{border-left:3px solid var(--coral);background:var(--coral-tint);padding:10px 14px;border-radius:0 10px 10px 0;font-size:15px}
+.platform b{display:block;font-size:13px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px}
+
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.chip{font-size:14px;padding:5px 11px;border-radius:999px;border:1px solid var(--line);background:var(--cream)}
+.chip.yes{background:#E9F1EC;border-color:#CFE2D6;color:#1F5136}
+.chip.no{background:#F3F1EE;color:#6B6B6B;text-decoration:line-through;text-decoration-color:#B9B2AA}
+.chip.part{background:#FFF6E0;border-color:#F2E2B3;color:#6B5310}
+
+.stat{margin-top:24px;display:grid;grid-template-columns:auto 1fr;gap:20px;align-items:center;background:var(--coral-tint);border:1px solid var(--coral-soft);border-radius:var(--radius);padding:20px 22px}
+.stat .num{font-family:'Playfair Display',serif;font-size:clamp(38px,6vw,52px);color:var(--coral);font-weight:700;line-height:1;white-space:nowrap}
+.stat p{min-width:0;overflow-wrap:break-word}
+.stat .ref{display:block;margin-top:6px;font-size:13px;color:var(--muted)}
+.stat .ref a{color:var(--muted)}
+
+.limits{margin-top:22px}
+.limits ul{list-style:none;display:grid;gap:8px}
+.limits li{padding-left:20px;position:relative;color:var(--muted);overflow-wrap:break-word}
+.limits li::before{content:"";position:absolute;left:4px;top:10px;width:7px;height:7px;border-radius:50%;background:var(--coral)}
+
+.takeaway{margin-top:24px;background:var(--navy);color:#fff;border-radius:var(--radius);padding:20px 24px;font-size:18px;line-height:1.4}
+.takeaway em{font-style:normal;color:var(--coral);font-weight:700}
+
+.media{margin-top:24px}
+.media-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.res{display:flex;flex-direction:column;gap:6px;text-decoration:none;color:var(--ink);background:var(--cream);border:1px solid var(--line);border-radius:12px;padding:14px 16px;transition:border-color .15s,transform .15s;min-width:0}
+.res:hover{border-color:var(--coral);transform:translateY(-1px)}
+.res .t{font-weight:700;line-height:1.3;overflow-wrap:break-word}
+.res .meta{display:flex;flex-wrap:wrap;gap:6px;font-size:12px}
+.tag{padding:2px 8px;border-radius:999px;font-weight:700;letter-spacing:.03em}
+.tag.fab{background:#E8EEF5;color:#1D3A5C}
+.tag.ind{background:#E9F1EC;color:#1F5136}
+.tag.aca{background:#F1E8F5;color:#4F2A63}
+.tag.fmt{background:#fff;border:1px solid var(--line);color:var(--muted);font-weight:500}
+.res .d{font-size:14px;color:var(--muted)}
+.media-note{margin-top:10px;font-size:13px;color:var(--muted)}
+
+.nav{display:flex;justify-content:space-between;gap:12px;margin-top:22px}
+.navbtn{font:inherit;font-size:15px;font-weight:500;background:transparent;border:1px solid var(--line);border-radius:999px;padding:9px 16px;cursor:pointer;color:var(--ink)}
+.navbtn:hover{border-color:var(--coral);color:var(--coral)}
+.navbtn[disabled]{visibility:hidden}
+
+/* Matrix */
+.intro-p{color:var(--muted);max-width:720px;margin:6px 0 20px}
+.legend{display:flex;flex-wrap:wrap;gap:16px;font-size:14px;color:var(--muted);margin-bottom:14px}
+.legend span{display:inline-flex;gap:6px;align-items:center}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--radius);background:var(--card)}
+table{border-collapse:collapse;width:100%;min-width:640px;font-size:15px}
+th,td{padding:12px 14px;text-align:center;border-bottom:1px solid var(--line)}
+thead th{background:var(--navy);color:#fff;font-weight:700;font-size:14px;position:sticky;top:0}
+thead th:first-child{text-align:left}
+tbody th{text-align:left;font-weight:500;background:var(--card)}
+tbody th small{display:block;color:var(--muted);font-weight:400;font-size:12.5px}
+tbody tr.group td,tbody tr.group th{background:var(--coral-tint);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--coral);font-weight:700;text-align:left}
+tbody tr:last-child th,tbody tr:last-child td{border-bottom:none}
+.dot{display:inline-block;width:16px;height:16px;border-radius:50%;vertical-align:middle}
+.d-full{background:var(--coral)}
+.d-part{background:linear-gradient(90deg,var(--coral) 50%,#fff 50%);border:1.5px solid var(--coral)}
+.d-none{border:1.5px solid #C9C1B8;background:#fff}
+.scroll-hint{display:none;font-size:13px;color:var(--coral);margin-bottom:8px;font-weight:500}
+@media (max-width:760px){
+  .scroll-hint{display:block}
+  table{min-width:560px;font-size:14px}
+  th,td{padding:10px 8px}
+  tbody th:first-child,thead th:first-child{position:sticky;left:0;z-index:1;min-width:150px;max-width:150px;box-shadow:1px 0 0 var(--line)}
+  thead th:first-child{background:var(--navy);z-index:2}
+  tbody tr.group th{position:static;max-width:none;box-shadow:none}
+  .gl{position:sticky;left:8px}
+}
+.fn{margin-top:14px;font-size:14px;color:var(--muted);display:grid;gap:6px}
+
+/* References */
+.refs{display:grid;gap:14px;counter-reset:r}
+.refs li{list-style:none;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;overflow-wrap:break-word}
+.refs li small{display:block;color:var(--coral);font-weight:700;font-size:12px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px}
+
+footer{border-top:1px solid var(--line);padding:26px 0 40px;font-size:14px;color:var(--muted)}
+footer .disc{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:16px}
+footer .row{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px}
+
+@media (max-width:760px){
+  .grid2{grid-template-columns:1fr}
+  .card{padding:20px}
+  .big{font-size:48px;padding-right:14px}
+  .stat{grid-template-columns:1fr;gap:8px}
+  .brand small{display:none}
+  .hero{padding:28px 0 20px}
+  .lead{font-size:16px}
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="brand">
+    <b>Genomi<span>K</span>mente</b>
+    <small>by Lidia Segura · @genomikmente</small>
+  </header>
+
+  <section class="hero">
+    <div class="eyebrow">Herramienta educativa · Tecnologías genómicas</div>
+    <h1>¿Qué pregunta responde cada tecnología?</h1>
+    <p class="lead">Un exoma negativo no significa que la causa no sea genética. Significa que hicimos <strong>una</strong> pregunta y la respuesta no estaba ahí. Explora qué pregunta responde cada tecnología, cómo funciona y qué puede (y no puede) ver.</p>
+    <p class="note"><span aria-hidden="true">ⓘ</span><span><b>No es un algoritmo de decisión.</b> Es un mapa conceptual para entender cada capa de información. La elección de un estudio depende del fenotipo, la historia familiar y la disponibilidad local.</span></p>
+  </section>
+</div>
+
+<nav class="tabs" aria-label="Tecnologías">
+  <div class="wrap">
+    <div class="tablist" role="tablist" id="tablist"></div>
+  </div>
+</nav>
+
+<main class="wrap" id="main"></main>
+
+<div class="wrap">
+  <footer>
+    <div class="disc"><b>Contenido educativo.</b> Esta herramienta no reemplaza la evaluación clínica, el criterio del especialista en genómica ni el asesoramiento genético. Las cifras provienen de las cohortes citadas y varían según el fenotipo, la población y el diseño del estudio.</div>
+    <div class="row">
+      <span>GenomiKmente · by Lidia Segura · @genomikmente</span>
+      <span>Enlaces y cifras revisados: septiembre 2026</span>
+    </div>
+  </footer>
+</div>
+
+<script>
+const REFS = {
+  clark:  {short:"Clark et al. NPJ Genom Med 2018", full:"Clark MM, Stark Z, Farnaes L, et al. Meta-analysis of the diagnostic and clinical utility of genome and exome sequencing and chromosomal microarray in children with suspected genetic diseases. NPJ Genom Med. 2018;3:16.", url:"https://pubmed.ncbi.nlm.nih.gov/30002876/", used:"WES"},
+  chung:  {short:"Chung et al. Genet Med 2023", full:"Chung CCY, Hue SPY, Ng NYT, et al. Meta-analysis of the diagnostic and clinical utility of exome and genome sequencing in pediatric and adult patients with rare diseases across diverse populations. Genet Med. 2023;25(9):100896.", url:"https://www.sciencedirect.com/science/article/pii/S1098360023009097", used:"WES · WGS"},
+  wojcik: {short:"Wojcik et al. N Engl J Med 2024", full:"Wojcik MH, Lemire G, Berger E, et al. Genome sequencing for diagnosing rare diseases. N Engl J Med. 2024;390(21):1985–1997.", url:"https://pubmed.ncbi.nlm.nih.gov/38838312/", used:"WGS"},
+  ibrahim:{short:"Abdulsalam Ibrahim et al. Front Genet 2026", full:"Abdulsalam Ibrahim A, Fakhro KA, Abdallah AM. Diagnostic yield of long-read sequencing for rare diseases: a systematic review. Front Genet. 2026;17:1809097.", url:"https://pubmed.ncbi.nlm.nih.gov/42326387/", used:"Long-read"},
+  rosen:  {short:"Rosenblum et al. Genet Med 2026", full:"Rosenblum J, Rijckmans E, Osei R, et al. RNA sequencing offers new diagnostic opportunities in neurodevelopmental disorders: a systematic review. Genet Med. 2026;28(4):101666.", url:"https://pubmed.ncbi.nlm.nih.gov/41447040/", used:"RNA-seq"},
+  kerkhof:{short:"Kerkhof et al. Genet Med 2024", full:"Kerkhof J, Rastin C, Levy MA, et al. Diagnostic utility and reporting recommendations for clinical DNA methylation episignature testing in genetically undiagnosed rare diseases. Genet Med. 2024;26(5):101075.", url:"https://pubmed.ncbi.nlm.nih.gov/38251460/", used:"Episignaturas"}
+};
+
+const TECH = [
+{
+  id:"wes", n:"01", name:"WES", full:"Whole Exome Sequencing · Secuenciación del exoma",
+  q:"¿Qué variante hay en las regiones codificantes?",
+  qsub:"El primer gran salto: leer los exones, donde se concentra la mayoría de las variantes patogénicas conocidas en enfermedades monogénicas.",
+  steps:[
+    "Se fragmenta el ADN y se <b>capturan los exones</b> con sondas de hibridación (≈1–2 % del genoma).",
+    "Los fragmentos capturados se secuencian con <b>lecturas cortas</b> (≈100–150 pb).",
+    "Las lecturas se alinean al genoma de referencia y se identifican las diferencias: <b>SNV e indels</b>.",
+    "El análisis en <b>trío</b> (probando + padres) permite ver variantes de novo y la segregación."
+  ],
+  platforms:[["Química dominante","Secuenciación por síntesis (Illumina) y plataformas de lectura corta equivalentes."]],
+  sees:[["SNV e indels codificantes","yes"],["Sitios canónicos de splicing","yes"],["CNV (según el caso)","part"],["Intrones profundos","no"],["Variantes estructurales balanceadas","no"],["Expansiones repetitivas","no"]],
+  stat:{num:"36–38 %", text:"Rendimiento diagnóstico agrupado en metaanálisis. El diseño en trío casi <b>duplica las probabilidades</b> de diagnóstico frente al caso índice solo (OR 2,04).", refs:["clark","chung"]},
+  limits:["Cobertura irregular: regiones ricas en GC y exones mal capturados.","Sensibilidad limitada para CNV pequeñas y nula para variantes estructurales balanceadas.","No explora la mayor parte del genoma no codificante."],
+  take:"La primera revolución fue <em>aprender a leer los exones</em>.",
+  media:[
+    {t:"Overview of Illumina Sequencing by Synthesis Workflow", url:"https://www.youtube.com/watch?v=fCd6B5HRaZ8", src:"Illumina", kind:"fab", fmt:"Video", d:"Animación de la química de lectura corta: preparación de librerías, clusters y SBS."},
+    {t:"Exome Sequencing 101: Target Enrichment", url:"https://www.twistbioscience.com/blog/science/exome-sequencing-101-part-2-target-enrichment", src:"Twist Bioscience", kind:"fab", fmt:"Lectura", d:"Cómo funciona la captura por hibridación que define un exoma."},
+    {t:"Whole Genome or Exome Sequencing (Choosing Genomics Tools)", url:"https://hutchdatascience.org/Choosing_Genomics_Tools/whole-genome-or-exome-sequencing.html", src:"Fred Hutch Data Science Lab", kind:"ind", fmt:"Lectura", d:"Diferencias WES/WGS y flujo de análisis, sin sesgo comercial."}
+  ]
+},
+{
+  id:"wgs", n:"02", name:"WGS", full:"Whole Genome Sequencing · Secuenciación del genoma",
+  q:"¿Qué se nos escapaba?",
+  qsub:"Sin paso de captura, la cobertura es más uniforme y la búsqueda se extiende a regiones no codificantes y a cambios estructurales.",
+  steps:[
+    "El ADN se fragmenta <b>sin captura</b> (idealmente sin PCR) y se secuencia completo con lecturas cortas.",
+    "Una cobertura uniforme (≈30×) permite inferir <b>CNV</b> por profundidad de lectura.",
+    "Las lecturas discordantes y divididas revelan <b>variantes estructurales</b> y puntos de ruptura.",
+    "Herramientas específicas estiman algunas <b>expansiones repetitivas</b> conocidas."
+  ],
+  platforms:[["Química dominante","Secuenciación por síntesis de lectura corta, la misma base tecnológica que el exoma."]],
+  sees:[["SNV e indels (todo el genoma)","yes"],["Intrones profundos e intergénicas","yes"],["CNV","yes"],["Variantes estructurales","part"],["Algunas expansiones repetitivas","part"],["Pseudogenes y regiones homólogas","part"]],
+  stat:{num:"≈8 %", text:"De las familias <b>sin diagnóstico tras exoma</b>, un 8,2 % tenía variantes que solo el genoma podía detectar. La mayoría de los diagnósticos restantes de esa cohorte llegaron por <b>reanálisis</b>, no por secuenciar más.", refs:["wojcik"]},
+  limits:["Interpretar variantes no codificantes sigue siendo difícil: hay muchas y poca evidencia funcional.","Las lecturas cortas no resuelven regiones repetitivas, segmentos duplicados ni pseudogenes.","Mayor costo de almacenamiento y análisis que el exoma."],
+  take:"Más genoma, más contexto, <em>más posibilidades de diagnóstico</em>.",
+  media:[
+    {t:"Overview of Illumina Sequencing by Synthesis Workflow", url:"https://www.youtube.com/watch?v=fCd6B5HRaZ8", src:"Illumina", kind:"fab", fmt:"Video", d:"La misma química que el exoma, sin captura: del ADN al archivo de lecturas."},
+    {t:"Whole Genome or Exome Sequencing (Choosing Genomics Tools)", url:"https://hutchdatascience.org/Choosing_Genomics_Tools/whole-genome-or-exome-sequencing.html", src:"Fred Hutch Data Science Lab", kind:"ind", fmt:"Lectura", d:"Qué gana el genoma frente al exoma y qué cambia en el análisis."}
+  ]
+},
+{
+  id:"lr", n:"03", name:"Long-read WGS", full:"Secuenciación de lecturas largas",
+  q:"¿Qué regiones seguían ciegas?",
+  qsub:"Lecturas de miles a decenas de miles de bases que atraviesan de punta a punta las regiones que las lecturas cortas no pueden resolver.",
+  steps:[
+    "Se secuencian <b>moléculas nativas</b> de ADN, sin amplificar, en lecturas de ≈15 kb a más de 100 kb.",
+    "Una sola lectura atraviesa repeticiones, duplicaciones segmentarias y puntos de ruptura completos.",
+    "Las lecturas largas permiten asignar variantes a cada cromosoma: <b>fase haplotípica</b>.",
+    "Al leer ADN nativo, detectan <b>metilación</b> en la misma corrida."
+  ],
+  platforms:[["PacBio HiFi","La molécula se circulariza y se lee varias veces; el consenso alcanza >99,9 % de exactitud."],["Oxford Nanopore","La hebra pasa por un nanoporo; los cambios de corriente eléctrica se traducen en bases. Permite lecturas ultralargas."]],
+  sees:[["Regiones repetitivas","yes"],["Variantes estructurales complejas","yes"],["Expansiones repetitivas (tamaño completo)","yes"],["Pseudogenes y homólogos","yes"],["Fase haplotípica","yes"],["Metilación nativa","yes"]],
+  stat:{num:"≈4,5 %", text:"Diagnósticos adicionales en casos <b>no resueltos tras secuenciación de lectura corta</b> (29/646). Rango de 1–33 % según la cohorte y la selección de pacientes.", refs:["ibrahim"]},
+  limits:["Mayor costo y disponibilidad clínica aún limitada, sobre todo en Latinoamérica.","Bases de frecuencia poblacional y flujos de análisis menos maduros que los de lectura corta.","Su mayor valor está en casos seleccionados, no como sustituto universal."],
+  take:"El genoma deja de ser <em>un mapa fragmentado</em>.",
+  media:[
+    {t:"PacBio sequencing: how it works", url:"https://www.pacb.com/videos/pacbio-sequencing-how-it-works/", src:"PacBio", kind:"fab", fmt:"Video", d:"Animación de SMRT/HiFi: circularización, consenso y detección de metilación."},
+    {t:"How Oxford Nanopore sequencing works", url:"https://www.youtube.com/watch?v=VxGliKyYuFQ", src:"Oxford Nanopore Technologies", kind:"fab", fmt:"Video", d:"Cómo el paso de la hebra por un nanoporo genera la señal que se convierte en secuencia."},
+    {t:"Diagnostic yield of long-read sequencing for rare diseases", url:"https://www.frontiersin.org/journals/genetics/articles/10.3389/fgene.2026.1809097/full", src:"Front Genet 2026", kind:"aca", fmt:"Artículo abierto", d:"Revisión sistemática: qué aporta realmente long-read tras lectura corta negativa."}
+  ]
+},
+{
+  id:"rna", n:"04", name:"RNA-seq", full:"Secuenciación de ARN · Transcriptómica",
+  q:"¿Qué hace realmente esa variante?",
+  qsub:"Pasamos de la secuencia a la función: el ARN muestra si una variante altera el splicing o la expresión del gen.",
+  steps:[
+    "Se extrae ARN de un <b>tejido donde el gen se exprese</b> (sangre, fibroblastos, músculo…).",
+    "El ARN se convierte en ADNc y se secuencia.",
+    "Se compara con controles para detectar <b>splicing aberrante</b>, expresión reducida o expresión de un solo alelo.",
+    "El hallazgo funcional puede <b>reclasificar una VUS</b> o señalar una variante no codificante."
+  ],
+  platforms:[["Enfoque","Análisis de valores atípicos (outliers) frente a cohortes de referencia del mismo tejido."]],
+  sees:[["Splicing aberrante","yes"],["Exones crípticos / retención de intrones","yes"],["Expresión reducida o ausente","yes"],["Expresión monoalélica","yes"],["La variante causal en sí","part"],["Genes no expresados en el tejido","no"]],
+  stat:{num:"≈15 %", text:"Rendimiento diagnóstico adicional medio (15,5 %) en <b>trastornos del neurodesarrollo</b> no resueltos por exoma o genoma. Varía según el tejido y el diseño del estudio.", refs:["rosen"]},
+  limits:["Depende del tejido: muchos genes neurológicos se expresan poco en sangre.","El decaimiento mediado por mutaciones sin sentido (NMD) puede ocultar el alelo afectado.","Requiere cohortes de referencia y experiencia en interpretación."],
+  take:"El ADN nos dice qué podría estar mal. El ARN puede mostrarnos <em>qué está ocurriendo</em>.",
+  media:[
+    {t:"StatQuest: A gentle introduction to RNA-seq", url:"https://www.youtube.com/watch?v=tlf6wYJrwKY", src:"StatQuest with Josh Starmer", kind:"ind", fmt:"Video", d:"Explicación clara del flujo de RNA-seq: de la muestra a la cuantificación."},
+    {t:"RNA sequencing in neurodevelopmental disorders: a systematic review", url:"https://pubmed.ncbi.nlm.nih.gov/41447040/", src:"Genet Med 2026", kind:"aca", fmt:"Artículo", d:"Evidencia del valor diagnóstico agregado del ARN en la clínica."}
+  ]
+},
+{
+  id:"epi", n:"05", name:"Episignaturas", full:"Firmas de metilación del ADN",
+  q:"¿Qué huella dejó el trastorno en la metilación?",
+  qsub:"Algunos síndromes, sobre todo los causados por genes de la maquinaria epigenética, dejan un patrón de metilación reconocible en sangre.",
+  steps:[
+    "Se extrae ADN de <b>sangre periférica</b>.",
+    "Un microarreglo mide la metilación en cientos de miles de sitios CpG del genoma.",
+    "Un modelo compara el perfil del paciente con <b>firmas de referencia</b> validadas.",
+    "Una firma positiva orienta el diagnóstico o apoya la <b>clasificación de una VUS</b> en el gen correspondiente."
+  ],
+  platforms:[["Uso clínico","Servicios con bases de firmas validadas (p. ej., EpiSign, que informa más de 250 condiciones según el proveedor)."]],
+  sees:[["Síndromes con firma validada","yes"],["Soporte funcional para VUS","yes"],["Trastornos de impronta","yes"],["La variante causal en sí","no"],["Condiciones sin firma descrita","no"]],
+  stat:{num:"≈19 %", text:"Positivos en el tamizaje amplio de pacientes <b>sin diagnóstico genético</b> (312/1.667). Sube a <b>32 %</b> cuando se evalúa una VUS específica.", refs:["kerkhof"]},
+  limits:["Solo aplica a trastornos con episignatura validada; un resultado negativo no descarta.","No identifica la variante: debe correlacionarse con la secuencia.","El rendimiento depende del síndrome, del tejido analizado y de la calidad del modelo."],
+  take:"La epigenética no cambia la secuencia, pero <em>deja registrada su consecuencia</em>.",
+  media:[
+    {t:"Bekim Sadikovic, PhD – DNA Methylation Episignatures", url:"https://www.youtube.com/watch?v=8FjZ6S4UYD4", src:"SERGG Annual Meeting 2023", kind:"aca", fmt:"Conferencia", d:"Uno de los desarrolladores del enfoque explica cómo se construyen y usan las episignaturas."},
+    {t:"EpiSign: tecnología", url:"https://episign.com/technology/", src:"EpiSign", kind:"fab", fmt:"Lectura", d:"Cómo funciona el servicio clínico: microarreglo, base de firmas y muestra de sangre."}
+  ]
+}
+];
+
+const MATRIX = {
+  cols:["WES","WGS","Long-read","RNA-seq","Episignaturas"],
+  groups:[
+    {g:"Detecta la variante", rows:[
+      ["SNV e indels codificantes","",["f","f","f","p","n"]],
+      ["Intrones profundos y regiones no codificantes","",["n","f","f","n","n"]],
+      ["CNV","",["p","f","f","n","n"]],
+      ["Variantes estructurales balanceadas","inversiones, translocaciones",["n","p","f","n","n"]],
+      ["Expansiones repetitivas","",["n","p","f","n","n"]],
+      ["Pseudogenes y regiones homólogas","p. ej., SMN1, PMS2, CYP21A2",["n","p","f","n","n"]],
+      ["Fase haplotípica","",["p","p","f","n","n"]]
+    ]},
+    {g:"Muestra la consecuencia", rows:[
+      ["Splicing aberrante y expresión","",["n","n","n","f","n"]],
+      ["Metilación del ADN","",["n","n","f","n","f"]]
+    ]}
+  ]
+};
+
+const dot = v => ({f:'<span class="dot d-full" role="img" aria-label="Sí"></span>',p:'<span class="dot d-part" role="img" aria-label="Parcial"></span>',n:'<span class="dot d-none" role="img" aria-label="No"></span>'}[v]);
+const kindLabel = {fab:"Fabricante", ind:"Independiente", aca:"Académico"};
+
+function refLinks(keys){return keys.map(k=>`<a href="${REFS[k].url}" target="_blank" rel="noopener">${REFS[k].short}</a>`).join(" · ")}
+
+function techPanel(t,i){
+  return `<section class="panel" role="tabpanel" id="p-${t.id}" aria-labelledby="t-${t.id}" hidden>
+  <article class="card">
+    <div class="head"><div class="big">${t.n}</div><div><h2>${t.name}</h2><div class="full">${t.full}</div></div></div>
+    <p class="question">${t.q}</p>
+    <p class="question-sub">${t.qsub}</p>
+    <div class="grid2">
+      <div class="block">
+        <h3>Cómo funciona</h3>
+        <ol class="steps">${t.steps.map(s=>`<li><span>${s}</span></li>`).join("")}</ol>
+        <div class="platforms">${t.platforms.map(p=>`<div class="platform"><b>${p[0]}</b>${p[1]}</div>`).join("")}</div>
+      </div>
+      <div class="block">
+        <h3>Qué puede ver</h3>
+        <div class="chips">${t.sees.map(s=>`<span class="chip ${s[1]}">${s[1]==="part"?"◐ ":""}${s[0]}</span>`).join("")}</div>
+        <div class="limits"><h3>Limitaciones</h3><ul>${t.limits.map(l=>`<li>${l}</li>`).join("")}</ul></div>
+      </div>
+    </div>
+    <div class="stat"><div class="num">${t.stat.num}</div><p>${t.stat.text}<span class="ref">${refLinks(t.stat.refs)}</span></p></div>
+    <div class="takeaway">${t.take}</div>
+    <div class="media">
+      <h3 style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:12px">Míralo en acción</h3>
+      <div class="media-list">${t.media.map(m=>`<a class="res" href="${m.url}" target="_blank" rel="noopener">
+        <span class="meta"><span class="tag ${m.kind}">${kindLabel[m.kind]}</span><span class="tag fmt">${m.fmt} · en inglés</span></span>
+        <span class="t">${m.t}</span><span class="d">${m.d}</span><span class="d" style="font-size:13px">${m.src} ↗</span></a>`).join("")}</div>
+      <p class="media-note">Los recursos de fabricantes explican su propia plataforma; se incluyen con fines didácticos y no implican recomendación comercial.</p>
+    </div>
+    <div class="nav">
+      <button class="navbtn" data-go="${i-1}" ${i===0?"disabled":""}>← ${i>0?TECH[i-1].name:""}</button>
+      <button class="navbtn" data-go="${i+1}">${i<TECH.length-1?TECH[i+1].name:"Comparar"} →</button>
+    </div>
+  </article></section>`;
+}
+
+function matrixPanel(){
+  let rows="";
+  MATRIX.groups.forEach(g=>{
+    rows+=`<tr class="group"><th colspan="6"><span class="gl">${g.g}</span></th></tr>`;
+    g.rows.forEach(r=>{rows+=`<tr><th scope="row">${r[0]}${r[1]?`<small>${r[1]}</small>`:""}</th>${r[2].map(v=>`<td>${dot(v)}</td>`).join("")}</tr>`});
+  });
+  return `<section class="panel" role="tabpanel" id="p-cmp" aria-labelledby="t-cmp" hidden>
+    <div class="card">
+      <div class="eyebrow">Vista comparativa</div>
+      <h2 style="font-family:'Playfair Display',serif;font-size:clamp(26px,4vw,34px);margin:8px 0 4px">¿Qué ve cada tecnología?</h2>
+      <p class="intro-p">Cada columna es una capa de información distinta. Las tres primeras buscan la <b>variante</b>; RNA-seq y episignaturas muestran su <b>consecuencia funcional</b>.</p>
+      <div class="legend"><span>${dot("f")} Detecta bien</span><span>${dot("p")} Parcial o con limitaciones</span><span>${dot("n")} No diseñada para esto</span></div>
+      <p class="scroll-hint">Desliza la tabla hacia la izquierda para ver todas las tecnologías →</p>
+      <div class="tablewrap"><table>
+        <thead><tr><th scope="col">Tipo de hallazgo</th>${MATRIX.cols.map(c=>`<th scope="col">${c}</th>`).join("")}</tr></thead>
+        <tbody>${rows}</tbody></table></div>
+      <div class="fn">
+        <p>Fase haplotípica con WES/WGS: posible de forma indirecta con análisis en trío.</p>
+        <p>RNA-seq detecta SNV solo en genes expresados en el tejido analizado; no es su propósito principal.</p>
+        <p>Detectar depende también del análisis bioinformático: que una tecnología pueda ver algo no garantiza que el informe lo incluya.</p>
+      </div>
+      <div class="nav"><button class="navbtn" data-go="${TECH.length-1}">← ${TECH[TECH.length-1].name}</button><button class="navbtn" data-go="${TECH.length+1}">Referencias →</button></div>
+    </div></section>`;
+}
+
+function refsPanel(){
+  return `<section class="panel" role="tabpanel" id="p-ref" aria-labelledby="t-ref" hidden>
+    <div class="card">
+      <div class="eyebrow">Bibliografía</div>
+      <h2 style="font-family:'Playfair Display',serif;font-size:clamp(26px,4vw,34px);margin:8px 0 18px">Referencias</h2>
+      <ol class="refs">${Object.values(REFS).map(r=>`<li><small>${r.used}</small>${r.full} <a href="${r.url}" target="_blank" rel="noopener">Ver ↗</a></li>`).join("")}</ol>
+    </div></section>`;
+}
+
+const tabs=[...TECH.map(t=>({id:t.id,label:`<span class="n">${t.n}</span>${t.name}`})),{id:"cmp",label:"Comparar",alt:true},{id:"ref",label:"Referencias",alt:true}];
+document.getElementById("tablist").innerHTML=tabs.map(t=>`<button class="tab${t.alt?" alt":""}" role="tab" id="t-${t.id}" aria-controls="p-${t.id}" aria-selected="false" data-id="${t.id}">${t.label}</button>`).join("");
+document.getElementById("main").innerHTML=TECH.map(techPanel).join("")+matrixPanel()+refsPanel();
+
+function show(id,scroll){
+  if(!tabs.some(t=>t.id===id)) id=tabs[0].id;
+  document.querySelectorAll(".tab").forEach(b=>b.setAttribute("aria-selected",b.dataset.id===id));
+  document.querySelectorAll(".panel").forEach(p=>p.hidden=p.id!=="p-"+id);
+  const tb=document.getElementById("t-"+id); tb.scrollIntoView({block:"nearest",inline:"center"});
+  try{history.replaceState(null,"","#"+id)}catch(e){}
+  if(scroll){const top=document.querySelector(".tabs").offsetTop; if(window.scrollY>top) window.scrollTo({top, behavior:"smooth"});}
+}
+document.getElementById("tablist").addEventListener("click",e=>{const b=e.target.closest(".tab"); if(b) show(b.dataset.id,true)});
+document.getElementById("tablist").addEventListener("keydown",e=>{
+  if(!["ArrowRight","ArrowLeft"].includes(e.key))return;
+  const ids=tabs.map(t=>t.id), cur=ids.indexOf(document.activeElement.dataset.id); if(cur<0)return;
+  const nx=ids[(cur+(e.key==="ArrowRight"?1:-1)+ids.length)%ids.length]; show(nx); document.getElementById("t-"+nx).focus();
+});
+document.getElementById("main").addEventListener("click",e=>{const b=e.target.closest("[data-go]"); if(b) show(tabs[+b.dataset.go].id,true)});
+window.addEventListener("hashchange",()=>show((location.hash||"").slice(1)));
+show((location.hash||"").slice(1));
+</script>
+</body>
+</html>
